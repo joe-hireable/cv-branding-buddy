@@ -124,7 +124,7 @@ const CVPreview: React.FC<CVPreviewProps> = ({
                 <div className="flex justify-between items-start">
                   <div>
                     <h4 className="font-medium text-gray-800">{exp.title}</h4>
-                    <p className="text-gray-600">{exp.company}</p>
+                    <p className="text-gray-600">{isAnonymized ? '[Confidential]' : exp.company}</p>
                   </div>
                   <p className="text-sm text-gray-500">
                     {formatDate(exp.start)} - {exp.current ? 'Present' : formatDate(exp.end)}
@@ -161,13 +161,16 @@ const CVPreview: React.FC<CVPreviewProps> = ({
             <h3 className="text-lg font-semibold text-gray-800 mb-3">Education</h3>
             {cv.education.map((edu, index) => (
               <div key={index} className="mb-3">
-                <h4 className="font-medium text-gray-800">{edu.institution}</h4>
-                {edu.location && (
+                <h4 className="font-medium text-gray-800">{isAnonymized ? '[Confidential]' : edu.institution}</h4>
+                {edu.location && !isAnonymized && (
                   <p className="text-gray-500 text-sm">
                     {[edu.location.city, edu.location.country]
                       .filter(Boolean)
                       .join(', ')}
                   </p>
+                )}
+                {isAnonymized && edu.location && (
+                  <p className="text-gray-500 text-sm">[Anonymized Location]</p>
                 )}
                 {edu.qualifications && edu.qualifications.map((qual, idx) => (
                   <div key={idx} className="mt-1">
@@ -209,7 +212,8 @@ const CVPreview: React.FC<CVPreviewProps> = ({
               <div key={index} className="mb-2">
                 <p className="text-gray-700 font-medium">{cert.name}</p>
                 <p className="text-sm text-gray-500">
-                  {cert.issuer && `${cert.issuer} • `}
+                  {cert.issuer && isAnonymized ? '[Confidential]' : cert.issuer}
+                  {cert.issuer && ` • `}
                   {cert.date && formatDate(cert.date)}
                 </p>
               </div>
@@ -239,7 +243,7 @@ const CVPreview: React.FC<CVPreviewProps> = ({
             <h3 className="text-lg font-semibold text-gray-800 mb-3">Professional Memberships</h3>
             {cv.professionalMemberships.map((mem, index) => (
               <p key={index} className="text-gray-700 mb-1">
-                {mem.name}, {mem.institution}
+                {mem.name}, {isAnonymized ? '[Confidential]' : mem.institution}
               </p>
             ))}
           </div>
