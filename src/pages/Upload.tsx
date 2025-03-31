@@ -9,11 +9,14 @@ import { UploadIcon, FileText, UserCheck } from 'lucide-react';
 import { useCVContext } from '@/contexts/CVContext';
 import { uploadCV } from '@/services/api';
 import { toast } from '@/components/ui/use-toast';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 const UploadPage: React.FC = () => {
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [jdFile, setJdFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [matchToJD, setMatchToJD] = useState(false);
   const { setCv, setIsLoading: setCvIsLoading } = useCVContext();
   const navigate = useNavigate();
 
@@ -40,7 +43,7 @@ const UploadPage: React.FC = () => {
 
     try {
       // In a real app, we would upload the file to a server here
-      const response = await uploadCV(cvFile);
+      const response = await uploadCV(cvFile, matchToJD ? jdFile : null);
       
       if (response.status === 'success') {
         setCv(response.data);
@@ -86,16 +89,34 @@ const UploadPage: React.FC = () => {
           </div>
           
           <div className="mb-8">
-            <h2 className="text-lg font-medium text-gray-800 mb-3">Job Description (Optional)</h2>
-            <p className="text-sm text-gray-500 mb-3">
-              Adding a job description allows our AI to optimize the CV specifically for this role.
-            </p>
-            <FileUpload 
-              onFileSelected={handleJdUpload} 
-              isLoading={isLoading} 
-              label="Upload Job Description"
-              accept=".pdf,.doc,.docx,.txt"
-            />
+            <div className="flex items-center space-x-2 mb-4">
+              <Checkbox 
+                id="matchToJD" 
+                checked={matchToJD}
+                onCheckedChange={(checked) => setMatchToJD(checked === true)}
+              />
+              <label
+                htmlFor="matchToJD"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Match to Job Description?
+              </label>
+            </div>
+            
+            {matchToJD && (
+              <div>
+                <h2 className="text-lg font-medium text-gray-800 mb-3">Job Description</h2>
+                <p className="text-sm text-gray-500 mb-3">
+                  Adding a job description allows our AI to optimize the CV specifically for this role.
+                </p>
+                <FileUpload 
+                  onFileSelected={handleJdUpload} 
+                  isLoading={isLoading} 
+                  label="Upload Job Description"
+                  accept=".pdf,.doc,.docx,.txt"
+                />
+              </div>
+            )}
           </div>
           
           <Button 
