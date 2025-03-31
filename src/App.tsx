@@ -11,7 +11,7 @@ import { CVProvider } from "@/contexts/CVContext";
 import { RecruiterProvider } from "@/contexts/RecruiterContext";
 import { SettingsProvider } from "@/contexts/SettingsContext";
 
-import Upload from "./pages/Upload";
+import UploadPage from "./pages/Upload";
 import Preview from "./pages/Preview";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
@@ -31,7 +31,7 @@ const App = () => (
               <Sonner />
               <BrowserRouter>
                 <Routes>
-                  <Route path="/" element={<Upload />} />
+                  <Route path="/" element={<UploadPage />} />
                   <Route path="/preview" element={<Preview />} />
                   <Route path="/profile" element={<Profile />} />
                   <Route path="/settings" element={<Settings />} />

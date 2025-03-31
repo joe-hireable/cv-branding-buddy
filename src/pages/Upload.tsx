@@ -5,12 +5,12 @@ import Header from '@/components/Header';
 import FileUpload from '@/components/FileUpload';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Upload, FileText, UserCheck } from 'lucide-react';
+import { UploadIcon, FileText, UserCheck } from 'lucide-react';
 import { useCVContext } from '@/contexts/CVContext';
 import { uploadCV } from '@/services/api';
 import { toast } from '@/components/ui/use-toast';
 
-const Upload: React.FC = () => {
+const UploadPage: React.FC = () => {
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [jdFile, setJdFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -103,7 +103,7 @@ const Upload: React.FC = () => {
             disabled={!cvFile || isLoading}
             className="w-full py-6 text-lg bg-hireable-gradient hover:opacity-90"
           >
-            <Upload className="mr-2 h-5 w-5" /> Upload & Process
+            <UploadIcon className="mr-2 h-5 w-5" /> Upload & Process
           </Button>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-10">
@@ -139,7 +139,7 @@ const Upload: React.FC = () => {
               <CardContent className="pt-6">
                 <div className="flex flex-col items-center text-center">
                   <div className="bg-purple-100 p-3 rounded-full mb-3">
-                    <Upload className="h-6 w-6 text-hireable-primary" />
+                    <UploadIcon className="h-6 w-6 text-hireable-primary" />
                   </div>
                   <h3 className="font-medium mb-2">Instant Processing</h3>
                   <p className="text-sm text-gray-500">
@@ -165,4 +165,4 @@ const Upload: React.FC = () => {
   );
 };
 
-export default Upload;
+export default UploadPage;

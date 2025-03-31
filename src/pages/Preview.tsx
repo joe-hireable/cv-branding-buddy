@@ -1,7 +1,4 @@
-
 import React, { useState, useCallback } from 'react';
-import { DndProvider } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import CVSection from '@/components/CVSection';
@@ -228,261 +225,259 @@ const Preview: React.FC = () => {
   }
 
   return (
-    <DndProvider backend={HTML5Backend}>
-      <div className="min-h-screen bg-gray-50 flex flex-col">
-        <Header />
-        
-        <main className="flex-1 container mx-auto px-4 py-6">
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">CV Preview</h1>
-              <p className="text-gray-600 text-sm">Drag sections to reorder • Click section icons to edit or hide</p>
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <Header />
+      
+      <main className="flex-1 container mx-auto px-4 py-6">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">CV Preview</h1>
+            <p className="text-gray-600 text-sm">Drag sections to reorder • Click section icons to edit or hide</p>
+          </div>
+          
+          <div className="flex items-center gap-4">
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="anonymize"
+                checked={isAnonymized}
+                onCheckedChange={setIsAnonymized}
+              />
+              <Label htmlFor="anonymize">Anonymize</Label>
             </div>
             
-            <div className="flex items-center gap-4">
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="anonymize"
-                  checked={isAnonymized}
-                  onCheckedChange={setIsAnonymized}
-                />
-                <Label htmlFor="anonymize">Anonymize</Label>
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  <DownloadCloud className="h-4 w-4" /> Export
+                </Button>
+              </SheetTrigger>
+              <SheetContent>
+                <SheetHeader>
+                  <SheetTitle>Export CV</SheetTitle>
+                  <SheetDescription>
+                    Choose a format to export the CV. The document will be generated with your agency branding.
+                  </SheetDescription>
+                </SheetHeader>
+                
+                <div className="space-y-4 mt-6">
+                  <Button
+                    onClick={() => handleExport('PDF')}
+                    className="w-full bg-hireable-gradient hover:opacity-90"
+                    disabled={isExporting}
+                  >
+                    <DownloadCloud className="mr-2 h-4 w-4" /> 
+                    {isExporting ? 'Generating...' : 'Export as PDF'}
+                  </Button>
+                  
+                  <Button
+                    onClick={() => handleExport('DOCX')}
+                    variant="outline"
+                    className="w-full"
+                    disabled={isExporting}
+                  >
+                    <DownloadCloud className="mr-2 h-4 w-4" /> 
+                    {isExporting ? 'Generating...' : 'Export as DOCX'}
+                  </Button>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left column - Sections to drag and arrange */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-md shadow-sm p-4 mb-4">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="font-medium">CV Sections</h2>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsChatOpen(!isChatOpen)}
+                  className="text-hireable-primary"
+                >
+                  <MessageSquareText className="h-4 w-4 mr-1" />
+                  Edit with Chat
+                </Button>
               </div>
               
-              <Sheet>
-                <SheetTrigger asChild>
-                  <Button variant="outline" className="gap-2">
-                    <DownloadCloud className="h-4 w-4" /> Export
-                  </Button>
-                </SheetTrigger>
-                <SheetContent>
-                  <SheetHeader>
-                    <SheetTitle>Export CV</SheetTitle>
-                    <SheetDescription>
-                      Choose a format to export the CV. The document will be generated with your agency branding.
-                    </SheetDescription>
-                  </SheetHeader>
+              {isChatOpen && (
+                <div className="mb-4">
+                  <ChatEditor onClose={() => setIsChatOpen(false)} />
+                </div>
+              )}
+              
+              <div className="space-y-3">
+                {sectionOrder.sections.map((sectionKey, index) => {
+                  let sectionTitle = '';
+                  let sectionContent = null;
+                  let canOptimize = false;
+                  const isVisible = sectionVisibility[sectionKey as keyof typeof sectionVisibility];
                   
-                  <div className="space-y-4 mt-6">
-                    <Button
-                      onClick={() => handleExport('PDF')}
-                      className="w-full bg-hireable-gradient hover:opacity-90"
-                      disabled={isExporting}
-                    >
-                      <DownloadCloud className="mr-2 h-4 w-4" /> 
-                      {isExporting ? 'Generating...' : 'Export as PDF'}
-                    </Button>
+                  switch(sectionKey) {
+                    case 'personalInfo':
+                      sectionTitle = 'Personal Information';
+                      sectionContent = (
+                        <div className="text-sm">
+                          <p className="font-medium">Name</p>
+                          <p className="text-gray-500">{isAnonymized ? '[Anonymized]' : `${cv.firstName || ''} ${cv.surname || ''}`}</p>
+                          
+                          <p className="font-medium mt-2">Contact</p>
+                          <p className="text-gray-500">{isAnonymized ? '[Hidden]' : (cv.email || cv.phone || 'No contact info')}</p>
+                        </div>
+                      );
+                      break;
                     
-                    <Button
-                      onClick={() => handleExport('DOCX')}
-                      variant="outline"
-                      className="w-full"
-                      disabled={isExporting}
+                    case 'profileStatement':
+                      sectionTitle = 'Professional Summary';
+                      canOptimize = true;
+                      sectionContent = (
+                        <p className="text-sm text-gray-600 line-clamp-3">{cv.profileStatement}</p>
+                      );
+                      break;
+                    
+                    case 'skills':
+                      sectionTitle = 'Skills';
+                      canOptimize = true;
+                      sectionContent = (
+                        <div className="flex flex-wrap gap-1">
+                          {cv.skills.slice(0, 3).map((skill, idx) => (
+                            <div key={idx} className="text-xs bg-gray-100 px-2 py-1 rounded">
+                              {skill.name}
+                            </div>
+                          ))}
+                          {cv.skills.length > 3 && (
+                            <div className="text-xs bg-gray-100 px-2 py-1 rounded">
+                              +{cv.skills.length - 3} more
+                            </div>
+                          )}
+                        </div>
+                      );
+                      break;
+                    
+                    case 'experience':
+                      sectionTitle = 'Work Experience';
+                      sectionContent = (
+                        <div className="space-y-2">
+                          {cv.experience.map((exp, idx) => (
+                            <div key={idx} className="text-sm">
+                              <div className="flex justify-between">
+                                <p className="font-medium">{exp.title}</p>
+                                <Button
+                                  variant="ghost" 
+                                  size="sm"
+                                  className="h-6 px-2 text-xs"
+                                  onClick={() => handleOptimizeExperience(idx)}
+                                  disabled={optimizingExperienceIndex === idx}
+                                >
+                                  {optimizingExperienceIndex === idx ? 'Optimizing...' : 'Optimize'}
+                                </Button>
+                              </div>
+                              <p className="text-gray-500 text-xs">{exp.company}</p>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                      break;
+                    
+                    case 'achievements':
+                      sectionTitle = 'Key Achievements';
+                      canOptimize = true;
+                      sectionContent = (
+                        <ul className="text-sm text-gray-600 ml-4 list-disc">
+                          {cv.achievements.slice(0, 2).map((achievement, idx) => (
+                            <li key={idx} className="line-clamp-1">{achievement}</li>
+                          ))}
+                          {cv.achievements.length > 2 && (
+                            <li className="text-gray-400">+{cv.achievements.length - 2} more achievements</li>
+                          )}
+                        </ul>
+                      );
+                      break;
+                    
+                    case 'education':
+                      sectionTitle = 'Education';
+                      sectionContent = (
+                        <div className="text-sm">
+                          {cv.education && cv.education.map((edu, idx) => (
+                            <div key={idx} className="mb-1">
+                              <p className="font-medium">{edu.institution}</p>
+                              {edu.qualifications && edu.qualifications[0] && (
+                                <p className="text-gray-500 text-xs">
+                                  {edu.qualifications[0].qualification} in {edu.qualifications[0].course}
+                                </p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      );
+                      break;
+                    
+                    default:
+                      sectionTitle = sectionKey
+                        .replace(/([A-Z])/g, ' $1')
+                        .replace(/^./, str => str.toUpperCase());
+                      sectionContent = (
+                        <p className="text-sm text-gray-500">Section preview not available</p>
+                      );
+                  }
+                  
+                  return (
+                    <CVSection
+                      key={sectionKey}
+                      id={sectionKey}
+                      title={sectionTitle}
+                      isVisible={isVisible}
+                      onVisibilityToggle={() => setSectionVisibility(
+                        sectionKey as keyof typeof sectionVisibility,
+                        !isVisible
+                      )}
+                      onOptimize={
+                        canOptimize
+                          ? sectionKey === 'profileStatement'
+                            ? handleOptimizeProfileStatement
+                            : sectionKey === 'skills'
+                              ? handleOptimizeSkills
+                              : sectionKey === 'achievements'
+                                ? handleOptimizeAchievements
+                                : undefined
+                          : undefined
+                      }
+                      isOptimizing={
+                        (sectionKey === 'profileStatement' && isOptimizingProfileStatement) ||
+                        (sectionKey === 'skills' && isOptimizingSkills) ||
+                        (sectionKey === 'achievements' && isOptimizingAchievements)
+                      }
+                      index={index}
+                      moveSection={moveSection}
                     >
-                      <DownloadCloud className="mr-2 h-4 w-4" /> 
-                      {isExporting ? 'Generating...' : 'Export as DOCX'}
-                    </Button>
-                  </div>
-                </SheetContent>
-              </Sheet>
+                      {sectionContent}
+                    </CVSection>
+                  );
+                })}
+              </div>
             </div>
           </div>
           
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left column - Sections to drag and arrange */}
-            <div className="lg:col-span-1">
-              <div className="bg-white rounded-md shadow-sm p-4 mb-4">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="font-medium">CV Sections</h2>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setIsChatOpen(!isChatOpen)}
-                    className="text-hireable-primary"
-                  >
-                    <MessageSquareText className="h-4 w-4 mr-1" />
-                    Edit with Chat
-                  </Button>
-                </div>
-                
-                {isChatOpen && (
-                  <div className="mb-4">
-                    <ChatEditor onClose={() => setIsChatOpen(false)} />
-                  </div>
-                )}
-                
-                <div className="space-y-3">
-                  {sectionOrder.sections.map((sectionKey, index) => {
-                    let sectionTitle = '';
-                    let sectionContent = null;
-                    let canOptimize = false;
-                    const isVisible = sectionVisibility[sectionKey as keyof typeof sectionVisibility];
-                    
-                    switch(sectionKey) {
-                      case 'personalInfo':
-                        sectionTitle = 'Personal Information';
-                        sectionContent = (
-                          <div className="text-sm">
-                            <p className="font-medium">Name</p>
-                            <p className="text-gray-500">{isAnonymized ? '[Anonymized]' : `${cv.firstName || ''} ${cv.surname || ''}`}</p>
-                            
-                            <p className="font-medium mt-2">Contact</p>
-                            <p className="text-gray-500">{isAnonymized ? '[Hidden]' : (cv.email || cv.phone || 'No contact info')}</p>
-                          </div>
-                        );
-                        break;
-                      
-                      case 'profileStatement':
-                        sectionTitle = 'Professional Summary';
-                        canOptimize = true;
-                        sectionContent = (
-                          <p className="text-sm text-gray-600 line-clamp-3">{cv.profileStatement}</p>
-                        );
-                        break;
-                      
-                      case 'skills':
-                        sectionTitle = 'Skills';
-                        canOptimize = true;
-                        sectionContent = (
-                          <div className="flex flex-wrap gap-1">
-                            {cv.skills.slice(0, 3).map((skill, idx) => (
-                              <div key={idx} className="text-xs bg-gray-100 px-2 py-1 rounded">
-                                {skill.name}
-                              </div>
-                            ))}
-                            {cv.skills.length > 3 && (
-                              <div className="text-xs bg-gray-100 px-2 py-1 rounded">
-                                +{cv.skills.length - 3} more
-                              </div>
-                            )}
-                          </div>
-                        );
-                        break;
-                      
-                      case 'experience':
-                        sectionTitle = 'Work Experience';
-                        sectionContent = (
-                          <div className="space-y-2">
-                            {cv.experience.map((exp, idx) => (
-                              <div key={idx} className="text-sm">
-                                <div className="flex justify-between">
-                                  <p className="font-medium">{exp.title}</p>
-                                  <Button
-                                    variant="ghost" 
-                                    size="sm"
-                                    className="h-6 px-2 text-xs"
-                                    onClick={() => handleOptimizeExperience(idx)}
-                                    disabled={optimizingExperienceIndex === idx}
-                                  >
-                                    {optimizingExperienceIndex === idx ? 'Optimizing...' : 'Optimize'}
-                                  </Button>
-                                </div>
-                                <p className="text-gray-500 text-xs">{exp.company}</p>
-                              </div>
-                            ))}
-                          </div>
-                        );
-                        break;
-                      
-                      case 'achievements':
-                        sectionTitle = 'Key Achievements';
-                        canOptimize = true;
-                        sectionContent = (
-                          <ul className="text-sm text-gray-600 ml-4 list-disc">
-                            {cv.achievements.slice(0, 2).map((achievement, idx) => (
-                              <li key={idx} className="line-clamp-1">{achievement}</li>
-                            ))}
-                            {cv.achievements.length > 2 && (
-                              <li className="text-gray-400">+{cv.achievements.length - 2} more achievements</li>
-                            )}
-                          </ul>
-                        );
-                        break;
-                      
-                      case 'education':
-                        sectionTitle = 'Education';
-                        sectionContent = (
-                          <div className="text-sm">
-                            {cv.education && cv.education.map((edu, idx) => (
-                              <div key={idx} className="mb-1">
-                                <p className="font-medium">{edu.institution}</p>
-                                {edu.qualifications && edu.qualifications[0] && (
-                                  <p className="text-gray-500 text-xs">
-                                    {edu.qualifications[0].qualification} in {edu.qualifications[0].course}
-                                  </p>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        );
-                        break;
-                      
-                      default:
-                        sectionTitle = sectionKey
-                          .replace(/([A-Z])/g, ' $1')
-                          .replace(/^./, str => str.toUpperCase());
-                        sectionContent = (
-                          <p className="text-sm text-gray-500">Section preview not available</p>
-                        );
-                    }
-                    
-                    return (
-                      <CVSection
-                        key={sectionKey}
-                        id={sectionKey}
-                        title={sectionTitle}
-                        isVisible={isVisible}
-                        onVisibilityToggle={() => setSectionVisibility(
-                          sectionKey as keyof typeof sectionVisibility,
-                          !isVisible
-                        )}
-                        onOptimize={
-                          canOptimize
-                            ? sectionKey === 'profileStatement'
-                              ? handleOptimizeProfileStatement
-                              : sectionKey === 'skills'
-                                ? handleOptimizeSkills
-                                : sectionKey === 'achievements'
-                                  ? handleOptimizeAchievements
-                                  : undefined
-                            : undefined
-                        }
-                        isOptimizing={
-                          (sectionKey === 'profileStatement' && isOptimizingProfileStatement) ||
-                          (sectionKey === 'skills' && isOptimizingSkills) ||
-                          (sectionKey === 'achievements' && isOptimizingAchievements)
-                        }
-                        index={index}
-                        moveSection={moveSection}
-                      >
-                        {sectionContent}
-                      </CVSection>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-            
-            {/* Right column - CV Preview */}
-            <div className="lg:col-span-2">
-              <div className="bg-white rounded-md shadow-sm p-6">
-                <CVPreview cv={cv} isAnonymized={isAnonymized} />
-              </div>
+          {/* Right column - CV Preview */}
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-md shadow-sm p-6">
+              <CVPreview cv={cv} isAnonymized={isAnonymized} />
             </div>
           </div>
-        </main>
-        
-        <footer className="border-t py-4">
-          <div className="container mx-auto px-4 text-sm text-gray-500 flex justify-between">
-            <p>© 2023 Hireable. All rights reserved.</p>
-            <div className="space-x-4">
-              <a href="#" className="hover:text-gray-700">Privacy Policy</a>
-              <a href="#" className="hover:text-gray-700">Terms of Service</a>
-            </div>
+        </div>
+      </main>
+      
+      <footer className="border-t py-4">
+        <div className="container mx-auto px-4 text-sm text-gray-500 flex justify-between">
+          <p>© 2023 Hireable. All rights reserved.</p>
+          <div className="space-x-4">
+            <a href="#" className="hover:text-gray-700">Privacy Policy</a>
+            <a href="#" className="hover:text-gray-700">Terms of Service</a>
           </div>
-        </footer>
-      </div>
-    </DndProvider>
+        </div>
+      </footer>
+    </div>
   );
 };
 
