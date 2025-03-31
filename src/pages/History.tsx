@@ -1,5 +1,6 @@
 
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -13,6 +14,17 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { MoreVertical, FileText, Download, Edit, Trash2 } from 'lucide-react';
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
 
 // Mock data for the history page
 const historyItems = [
@@ -51,12 +63,70 @@ const historyItems = [
 ];
 
 const History: React.FC = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [items, setItems] = useState(historyItems);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-GB', {
       day: 'numeric',
       month: 'short',
       year: 'numeric',
     });
+  };
+
+  const handleViewCV = (id: string) => {
+    // In a real app, we would likely navigate to a detailed view page
+    toast({
+      title: "Viewing CV",
+      description: `Navigating to CV viewer for ID: ${id}`,
+    });
+    navigate(`/preview?id=${id}`);
+  };
+
+  const handleExportCV = (id: string) => {
+    // In a real app, this would trigger a document download
+    toast({
+      title: "Exporting CV",
+      description: "Your document will download shortly",
+    });
+    // Mock download behavior
+    setTimeout(() => {
+      console.log(`Exported CV with ID: ${id}`);
+    }, 1000);
+  };
+
+  const handleEditCV = (id: string) => {
+    // Navigate to edit page
+    toast({
+      title: "Editing CV",
+      description: `Opening editor for CV ID: ${id}`,
+    });
+    navigate(`/preview?id=${id}&edit=true`);
+  };
+
+  const confirmDelete = (id: string) => {
+    setItemToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteCV = () => {
+    if (!itemToDelete) return;
+    
+    // Filter out the deleted item
+    setItems(items.filter(item => item.id !== itemToDelete));
+    
+    toast({
+      title: "CV Deleted",
+      description: "The CV has been removed from your history",
+      variant: "destructive",
+    });
+    
+    // Close the dialog
+    setDeleteDialogOpen(false);
+    setItemToDelete(null);
   };
 
   return (
@@ -69,7 +139,7 @@ const History: React.FC = () => {
           <p className="text-gray-600 mb-6">View and manage your previously processed CVs</p>
           
           <div className="space-y-4">
-            {historyItems.map((item) => (
+            {items.map((item) => (
               <Card key={item.id} className="overflow-hidden">
                 <CardContent className="p-0">
                   <div className="flex items-center p-4">
@@ -95,11 +165,21 @@ const History: React.FC = () => {
                     </div>
                     
                     <div className="flex items-center ml-4 space-x-2">
-                      <Button variant="outline" size="sm" className="hidden sm:flex">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="hidden sm:flex"
+                        onClick={() => handleViewCV(item.id)}
+                      >
                         <FileText className="h-4 w-4 mr-1" />
                         View
                       </Button>
-                      <Button variant="outline" size="sm" className="hidden sm:flex">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="hidden sm:flex"
+                        onClick={() => handleExportCV(item.id)}
+                      >
                         <Download className="h-4 w-4 mr-1" />
                         Export
                       </Button>
@@ -113,19 +193,28 @@ const History: React.FC = () => {
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem className="sm:hidden">
+                          <DropdownMenuItem 
+                            className="sm:hidden"
+                            onClick={() => handleViewCV(item.id)}
+                          >
                             <FileText className="h-4 w-4 mr-2" />
                             View
                           </DropdownMenuItem>
-                          <DropdownMenuItem className="sm:hidden">
+                          <DropdownMenuItem 
+                            className="sm:hidden"
+                            onClick={() => handleExportCV(item.id)}
+                          >
                             <Download className="h-4 w-4 mr-2" />
                             Export
                           </DropdownMenuItem>
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleEditCV(item.id)}>
                             <Edit className="h-4 w-4 mr-2" />
                             Edit
                           </DropdownMenuItem>
-                          <DropdownMenuItem className="text-red-600">
+                          <DropdownMenuItem 
+                            className="text-red-600"
+                            onClick={() => confirmDelete(item.id)}
+                          >
                             <Trash2 className="h-4 w-4 mr-2" />
                             Delete
                           </DropdownMenuItem>
@@ -138,7 +227,7 @@ const History: React.FC = () => {
             ))}
           </div>
           
-          {historyItems.length === 0 && (
+          {items.length === 0 && (
             <div className="text-center py-12">
               <h2 className="text-xl font-medium text-gray-700">No history yet</h2>
               <p className="text-gray-500 mt-2">
@@ -146,7 +235,7 @@ const History: React.FC = () => {
               </p>
               <Button 
                 className="mt-4 bg-hireable-gradient hover:opacity-90"
-                onClick={() => window.location.href = '/'}
+                onClick={() => navigate('/')}
               >
                 Upload CV
               </Button>
@@ -154,6 +243,24 @@ const History: React.FC = () => {
           )}
         </div>
       </main>
+      
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this CV from your history.
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteCV} className="bg-red-600 hover:bg-red-700">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       
       <footer className="border-t py-4 mt-8">
         <div className="container mx-auto px-4 text-sm text-gray-500 flex justify-between">
