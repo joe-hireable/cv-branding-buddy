@@ -1,1 +1,16 @@
 project_id = "bvnglrtwcrysosinnnem"
+
+[storage.buckets.cv_files]
+public = false
+file_size_limit = "10MiB"
+allowed_mime_types = ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"]
+
+[storage.buckets.company_logos]
+public = true
+file_size_limit = "5MiB"
+allowed_mime_types = ["image/jpeg", "image/png", "image/svg+xml"]
+
+[storage.buckets.generated_documents]
+public = false
+file_size_limit = "10MiB"
+allowed_mime_types = ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"]
