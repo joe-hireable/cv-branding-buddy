@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -12,61 +12,18 @@ import {
   TabsList, 
   TabsTrigger 
 } from '@/components/ui/tabs';
-import { GripVertical, Eye, EyeOff } from 'lucide-react';
+import { GripVertical, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useSettingsContext } from '@/contexts/SettingsContext';
-import { getAppSettings, updateAppSettings } from '@/services/api';
-import { toast } from '@/components/ui/use-toast';
 
 const Settings: React.FC = () => {
-  const { settings, updateSettings, setSectionVisibility } = useSettingsContext();
+  const { settings, updateSettings, setSectionVisibility, saveSettings, isLoading, error } = useSettingsContext();
   const [activeTab, setActiveTab] = useState('sections');
-  const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchSettings = async () => {
-      setIsLoading(true);
-      setError(null);
-      console.log('Fetching settings...');
-      
-      try {
-        const data = await getAppSettings();
-        console.log('Settings fetched:', data);
-        updateSettings(data);
-      } catch (error) {
-        console.error('Error fetching settings:', error);
-        setError('Failed to load settings. Please try again later.');
-        toast({
-          title: "Failed to load settings",
-          description: "Your settings could not be loaded. Please try again later.",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchSettings();
-  }, [updateSettings]);
 
   const handleSave = async () => {
     setIsSaving(true);
-    console.log('Saving settings:', settings);
-    
     try {
-      await updateAppSettings(settings);
-      toast({
-        title: "Settings updated",
-        description: "Your settings have been saved successfully.",
-      });
-    } catch (error) {
-      console.error('Error saving settings:', error);
-      toast({
-        title: "Update failed",
-        description: "Failed to save your settings. Please try again.",
-        variant: "destructive",
-      });
+      await saveSettings();
     } finally {
       setIsSaving(false);
     }
@@ -77,16 +34,13 @@ const Settings: React.FC = () => {
     updateSettings({ defaultExportFormat: format });
   };
 
-  console.log('Current settings:', settings);
-  console.log('Current active tab:', activeTab);
-  console.log('isLoading:', isLoading);
-
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col">
         <Header />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto text-hireable-primary mb-4" />
             <h2 className="text-xl font-medium text-gray-700">Loading settings...</h2>
           </div>
         </div>
@@ -121,6 +75,7 @@ const Settings: React.FC = () => {
         <Header />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto text-hireable-primary mb-4" />
             <h2 className="text-xl font-medium text-gray-700">Initializing settings...</h2>
           </div>
         </div>
@@ -251,11 +206,18 @@ const Settings: React.FC = () => {
                       </div>
                       
                       <Button 
-                        className="mt-6 bg-hireable-gradient hover:opacity-90" 
+                        className="mt-6 bg-gradient-to-r from-hireable-secondary to-hireable-primary hover:opacity-90" 
                         onClick={handleSave}
                         disabled={isSaving}
                       >
-                        {isSaving ? 'Saving...' : 'Save All Settings'}
+                        {isSaving ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Saving...
+                          </>
+                        ) : (
+                          'Save All Settings'
+                        )}
                       </Button>
                     </CardContent>
                   </Card>
@@ -297,11 +259,18 @@ const Settings: React.FC = () => {
                       </div>
                       
                       <Button 
-                        className="mt-6 bg-hireable-gradient hover:opacity-90" 
+                        className="mt-6 bg-gradient-to-r from-hireable-secondary to-hireable-primary hover:opacity-90" 
                         onClick={handleSave}
                         disabled={isSaving}
                       >
-                        {isSaving ? 'Saving...' : 'Save All Settings'}
+                        {isSaving ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Saving...
+                          </>
+                        ) : (
+                          'Save All Settings'
+                        )}
                       </Button>
                     </CardContent>
                   </Card>
@@ -337,11 +306,18 @@ const Settings: React.FC = () => {
                       </p>
                       
                       <Button 
-                        className="mt-6 bg-hireable-gradient hover:opacity-90" 
+                        className="mt-6 bg-gradient-to-r from-hireable-secondary to-hireable-primary hover:opacity-90" 
                         onClick={handleSave}
                         disabled={isSaving}
                       >
-                        {isSaving ? 'Saving...' : 'Save All Settings'}
+                        {isSaving ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Saving...
+                          </>
+                        ) : (
+                          'Save All Settings'
+                        )}
                       </Button>
                     </CardContent>
                   </Card>

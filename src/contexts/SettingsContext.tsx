@@ -1,12 +1,16 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { AppSettings, CVSectionVisibility } from '@/types/cv';
-import { getAppSettings } from '@/services/api';
+import { getAppSettings, updateAppSettings } from '@/services/api';
+import { toast } from '@/components/ui/use-toast';
 
 interface SettingsContextType {
   settings: AppSettings;
   updateSettings: (settings: Partial<AppSettings>) => void;
   setSectionVisibility: (section: keyof CVSectionVisibility, isVisible: boolean) => void;
+  saveSettings: () => Promise<void>;
+  isLoading: boolean;
+  error: string | null;
 }
 
 const defaultSectionVisibility: CVSectionVisibility = {
@@ -43,35 +47,44 @@ export const useSettingsContext = () => {
 
 export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [settings, setSettings] = useState<AppSettings>(defaultSettings);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
 
   // Initialize settings from API when the component mounts
   useEffect(() => {
+    if (isInitialized) return;
+    
     const initializeSettings = async () => {
       try {
-        console.log('Initializing settings from API...');
+        console.log('[SettingsContext] Initializing settings from API...');
+        setIsLoading(true);
+        setError(null);
+        
         const apiSettings = await getAppSettings();
-        console.log('Received settings from API:', apiSettings);
+        console.log('[SettingsContext] Received settings from API:', apiSettings);
         setSettings(apiSettings);
       } catch (error) {
-        console.error('Failed to initialize settings from API:', error);
+        console.error('[SettingsContext] Failed to initialize settings from API:', error);
+        setError('Failed to load settings. Please try again later.');
         // Fallback to default settings if API fails
-        console.log('Using default settings');
+        console.log('[SettingsContext] Using default settings');
       } finally {
+        setIsLoading(false);
         setIsInitialized(true);
       }
     };
 
     initializeSettings();
-  }, []);
+  }, [isInitialized]);
 
   const updateSettings = (newSettings: Partial<AppSettings>) => {
-    console.log('Updating settings with:', newSettings);
+    console.log('[SettingsContext] Updating settings with:', newSettings);
     setSettings(prev => ({ ...prev, ...newSettings }));
   };
 
   const setSectionVisibility = (section: keyof CVSectionVisibility, isVisible: boolean) => {
-    console.log(`Setting visibility for ${section} to ${isVisible}`);
+    console.log(`[SettingsContext] Setting visibility for ${section} to ${isVisible}`);
     setSettings(prev => ({
       ...prev,
       defaultSectionVisibility: {
@@ -80,6 +93,31 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
       },
     }));
   };
+  
+  const saveSettings = async () => {
+    try {
+      console.log('[SettingsContext] Saving settings to API:', settings);
+      setIsLoading(true);
+      const updatedSettings = await updateAppSettings(settings);
+      setSettings(updatedSettings);
+      toast({
+        title: "Settings updated",
+        description: "Your settings have been saved successfully.",
+      });
+      return Promise.resolve();
+    } catch (error) {
+      console.error('[SettingsContext] Error saving settings:', error);
+      setError('Failed to save settings. Please try again later.');
+      toast({
+        title: "Update failed",
+        description: "Failed to save your settings. Please try again.",
+        variant: "destructive",
+      });
+      return Promise.reject(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <SettingsContext.Provider
@@ -87,6 +125,9 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
         settings,
         updateSettings,
         setSectionVisibility,
+        saveSettings,
+        isLoading,
+        error
       }}
     >
       {children}
