@@ -4,7 +4,7 @@ import { CV, BackendResponse, RecruiterProfile, AppSettings } from '@/types/cv';
 // This is a mock implementation since we don't have the actual backend yet
 // In a real implementation, these would make API calls to the backend services
 
-export async function uploadCV(file: File): Promise<BackendResponse> {
+export async function uploadCV(file: File, jdFile: File | null = null): Promise<BackendResponse> {
   // Simulate API call
   return new Promise((resolve) => {
     setTimeout(() => {
