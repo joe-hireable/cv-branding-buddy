@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -23,10 +22,10 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 
-// Mock data for the history page
 const historyItems = [
   {
     id: '1',
@@ -68,6 +67,7 @@ const History: React.FC = () => {
   const [items, setItems] = useState(historyItems);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-GB', {
@@ -78,7 +78,6 @@ const History: React.FC = () => {
   };
 
   const handleViewCV = (id: string) => {
-    // In a real app, we would likely navigate to a detailed view page
     toast({
       title: "Viewing CV",
       description: `Navigating to CV viewer for ID: ${id}`,
@@ -87,19 +86,16 @@ const History: React.FC = () => {
   };
 
   const handleExportCV = (id: string) => {
-    // In a real app, this would trigger a document download
     toast({
       title: "Exporting CV",
       description: "Your document will download shortly",
     });
-    // Mock download behavior
     setTimeout(() => {
       console.log(`Exported CV with ID: ${id}`);
     }, 1000);
   };
 
   const handleEditCV = (id: string) => {
-    // Navigate to edit page
     toast({
       title: "Editing CV",
       description: `Opening editor for CV ID: ${id}`,
@@ -115,16 +111,35 @@ const History: React.FC = () => {
   const handleDeleteCV = () => {
     if (!itemToDelete) return;
     
-    // Filter out the deleted item
-    setItems(items.filter(item => item.id !== itemToDelete));
-    
-    toast({
-      title: "CV Deleted",
-      description: "The CV has been removed from your history",
-      variant: "destructive",
-    });
-    
-    // Close the dialog
+    try {
+      setIsDeleting(true);
+      
+      setItems(items.filter(item => item.id !== itemToDelete));
+      
+      toast({
+        title: "CV Deleted",
+        description: "The CV has been removed from your history",
+        variant: "destructive",
+      });
+    } catch (error) {
+      console.error("Error deleting CV:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete the CV. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setDeleteDialogOpen(false);
+      setItemToDelete(null);
+      setIsDeleting(false);
+      
+      setTimeout(() => {
+        document.getElementById('history-heading')?.focus();
+      }, 0);
+    }
+  };
+
+  const handleCancelDelete = () => {
     setDeleteDialogOpen(false);
     setItemToDelete(null);
   };
@@ -135,7 +150,7 @@ const History: React.FC = () => {
       
       <main className="flex-1 container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">History</h1>
+          <h1 id="history-heading" tabIndex={-1} className="text-2xl font-bold text-gray-900 mb-2">History</h1>
           <p className="text-gray-600 mb-6">View and manage your previously processed CVs</p>
           
           <div className="space-y-4">
@@ -254,9 +269,13 @@ const History: React.FC = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteCV} className="bg-red-600 hover:bg-red-700">
-              Delete
+            <AlertDialogCancel onClick={handleCancelDelete} disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteCV} 
+              className="bg-red-600 hover:bg-red-700"
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
