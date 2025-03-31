@@ -8,6 +8,7 @@ interface SettingsContextType {
   settings: AppSettings;
   updateSettings: (settings: Partial<AppSettings>) => void;
   setSectionVisibility: (section: keyof CVSectionVisibility, isVisible: boolean) => void;
+  setSectionOrder: (sections: string[]) => void;
   saveSettings: () => Promise<void>;
   isLoading: boolean;
   error: string | null;
@@ -28,8 +29,24 @@ const defaultSectionVisibility: CVSectionVisibility = {
   additionalDetails: true,
 };
 
+const defaultSectionOrder = [
+  'personalInfo',
+  'profileStatement',
+  'skills',
+  'experience',
+  'education',
+  'achievements',
+  'certifications',
+  'languages',
+  'professionalMemberships',
+  'publications',
+  'earlierCareer',
+  'additionalDetails',
+];
+
 const defaultSettings: AppSettings = {
   defaultSectionVisibility: defaultSectionVisibility,
+  defaultSectionOrder: { sections: defaultSectionOrder },
   defaultAnonymize: false,
   keepOriginalFiles: true,
   defaultExportFormat: 'PDF',
@@ -63,6 +80,12 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
         
         const apiSettings = await getAppSettings();
         console.log('[SettingsContext] Received settings from API:', apiSettings);
+        
+        // Ensure the section order exists
+        if (!apiSettings.defaultSectionOrder) {
+          apiSettings.defaultSectionOrder = defaultSettings.defaultSectionOrder;
+        }
+        
         setSettings(apiSettings);
       } catch (error) {
         console.error('[SettingsContext] Failed to initialize settings from API:', error);
@@ -90,6 +113,16 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
       defaultSectionVisibility: {
         ...prev.defaultSectionVisibility,
         [section]: isVisible,
+      },
+    }));
+  };
+  
+  const setSectionOrder = (sections: string[]) => {
+    console.log('[SettingsContext] Setting section order to:', sections);
+    setSettings(prev => ({
+      ...prev,
+      defaultSectionOrder: {
+        sections: sections,
       },
     }));
   };
@@ -125,6 +158,7 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
         settings,
         updateSettings,
         setSectionVisibility,
+        setSectionOrder,
         saveSettings,
         isLoading,
         error

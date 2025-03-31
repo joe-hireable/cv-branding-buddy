@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { CV, CVSectionVisibility } from '@/types/cv';
 import { Badge } from '@/components/ui/badge';
@@ -71,7 +70,6 @@ const CVPreview: React.FC<CVPreviewProps> = ({
     );
   };
 
-  // Function to render a specific section based on section key
   const renderSection = (sectionKey: string) => {
     if (!sectionVisibility[sectionKey as keyof CVSectionVisibility]) {
       return null;
@@ -268,7 +266,6 @@ const CVPreview: React.FC<CVPreviewProps> = ({
 
   return (
     <div className="max-w-2xl mx-auto bg-white p-6 shadow-sm">
-      {/* Render sections in the order specified by sectionOrder */}
       {sectionOrder.map(renderSection)}
     </div>
   );

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { UploadIcon, FileText, UserCheck } from 'lucide-react';
 import { useCVContext } from '@/contexts/CVContext';
+import { useSettingsContext } from '@/contexts/SettingsContext';
 import { uploadCV } from '@/services/api';
 import { toast } from '@/components/ui/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -17,7 +18,8 @@ const UploadPage: React.FC = () => {
   const [jdFile, setJdFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [matchToJD, setMatchToJD] = useState(false);
-  const { setCv, setIsLoading: setCvIsLoading } = useCVContext();
+  const { setCv, setIsLoading: setCvIsLoading, setSectionVisibility, setSectionOrder, setIsAnonymized } = useCVContext();
+  const { settings } = useSettingsContext();
   const navigate = useNavigate();
 
   const handleCvUpload = (file: File) => {
@@ -46,7 +48,27 @@ const UploadPage: React.FC = () => {
       const response = await uploadCV(cvFile, matchToJD ? jdFile : null);
       
       if (response.status === 'success') {
+        // Apply default settings from SettingsContext
+        if (settings) {
+          // Apply visibility settings
+          if (settings.defaultSectionVisibility) {
+            Object.entries(settings.defaultSectionVisibility).forEach(([section, isVisible]) => {
+              setSectionVisibility(section as any, isVisible);
+            });
+          }
+          
+          // Apply section order
+          if (settings.defaultSectionOrder && settings.defaultSectionOrder.sections) {
+            setSectionOrder(settings.defaultSectionOrder.sections);
+          }
+          
+          // Apply anonymization setting
+          setIsAnonymized(settings.defaultAnonymize || false);
+        }
+        
+        // Set the CV data
         setCv(response.data);
+        
         toast({
           title: "CV uploaded successfully",
           description: "Your CV has been processed.",

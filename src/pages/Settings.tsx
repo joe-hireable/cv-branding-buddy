@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -149,7 +149,7 @@ const SectionItem = ({ id, text, index, isVisible, moveSection, toggleVisibility
 };
 
 const Settings: React.FC = () => {
-  const { settings, updateSettings, setSectionVisibility, saveSettings, isLoading, error } = useSettingsContext();
+  const { settings, updateSettings, setSectionVisibility, setSectionOrder, saveSettings, isLoading, error } = useSettingsContext();
   const [activeTab, setActiveTab] = useState('sections');
   const [isSaving, setIsSaving] = useState(false);
   const [sections, setSections] = useState([
@@ -166,6 +166,20 @@ const Settings: React.FC = () => {
     { key: 'earlierCareer', label: 'Earlier Career' },
     { key: 'additionalDetails', label: 'Additional Details' },
   ]);
+
+  useEffect(() => {
+    if (settings?.defaultSectionOrder?.sections) {
+      const orderedSections = [...sections];
+      
+      orderedSections.sort((a, b) => {
+        const aIndex = settings.defaultSectionOrder.sections.indexOf(a.key);
+        const bIndex = settings.defaultSectionOrder.sections.indexOf(b.key);
+        return aIndex - bIndex;
+      });
+      
+      setSections(orderedSections);
+    }
+  }, [settings?.defaultSectionOrder]);
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -199,6 +213,8 @@ const Settings: React.FC = () => {
 
   const saveSectionOrder = () => {
     console.log('Saving section order:', sections);
+    const sectionKeys = sections.map(section => section.key);
+    setSectionOrder(sectionKeys);
     handleSave();
   };
 
