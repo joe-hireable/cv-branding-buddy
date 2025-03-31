@@ -44,19 +44,6 @@ const AlertDialogContent = React.forwardRef<
           props.onEscapeKeyDown(e);
         }
       }}
-      onPointerDownOutside={(e) => {
-        // Ensure clicking outside properly closes the dialog
-        if (props.onPointerDownOutside) {
-          props.onPointerDownOutside(e);
-        }
-      }}
-      onInteractOutside={(e) => {
-        // Prevent interaction with elements behind the dialog
-        e.preventDefault();
-        if (props.onInteractOutside) {
-          props.onInteractOutside(e);
-        }
-      }}
       {...props}
     />
   </AlertDialogPortal>
