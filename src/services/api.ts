@@ -249,6 +249,22 @@ export async function getAppSettings(): Promise<AppSettings> {
           publications: false,
           additionalDetails: false,
         },
+        defaultSectionOrder: {
+          sections: [
+            'personalInfo',
+            'profileStatement',
+            'skills',
+            'experience',
+            'education',
+            'achievements',
+            'certifications',
+            'languages',
+            'professionalMemberships',
+            'publications',
+            'earlierCareer',
+            'additionalDetails',
+          ]
+        },
         defaultAnonymize: false,
         keepOriginalFiles: true,
         defaultExportFormat: 'PDF'
