@@ -1,6 +1,7 @@
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { AppSettings, CVSectionVisibility } from '@/types/cv';
+import { getAppSettings } from '@/services/api';
 
 interface SettingsContextType {
   settings: AppSettings;
@@ -42,12 +43,35 @@ export const useSettingsContext = () => {
 
 export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [settings, setSettings] = useState<AppSettings>(defaultSettings);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Initialize settings from API when the component mounts
+  useEffect(() => {
+    const initializeSettings = async () => {
+      try {
+        console.log('Initializing settings from API...');
+        const apiSettings = await getAppSettings();
+        console.log('Received settings from API:', apiSettings);
+        setSettings(apiSettings);
+      } catch (error) {
+        console.error('Failed to initialize settings from API:', error);
+        // Fallback to default settings if API fails
+        console.log('Using default settings');
+      } finally {
+        setIsInitialized(true);
+      }
+    };
+
+    initializeSettings();
+  }, []);
 
   const updateSettings = (newSettings: Partial<AppSettings>) => {
+    console.log('Updating settings with:', newSettings);
     setSettings(prev => ({ ...prev, ...newSettings }));
   };
 
   const setSectionVisibility = (section: keyof CVSectionVisibility, isVisible: boolean) => {
+    console.log(`Setting visibility for ${section} to ${isVisible}`);
     setSettings(prev => ({
       ...prev,
       defaultSectionVisibility: {

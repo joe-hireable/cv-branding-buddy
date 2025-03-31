@@ -22,20 +22,26 @@ const Settings: React.FC = () => {
   const [activeTab, setActiveTab] = useState('sections');
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchSettings = async () => {
       setIsLoading(true);
+      setError(null);
+      console.log('Fetching settings...');
+      
       try {
         const data = await getAppSettings();
+        console.log('Settings fetched:', data);
         updateSettings(data);
       } catch (error) {
+        console.error('Error fetching settings:', error);
+        setError('Failed to load settings. Please try again later.');
         toast({
           title: "Failed to load settings",
           description: "Your settings could not be loaded. Please try again later.",
           variant: "destructive",
         });
-        console.error(error);
       } finally {
         setIsLoading(false);
       }
@@ -46,6 +52,8 @@ const Settings: React.FC = () => {
 
   const handleSave = async () => {
     setIsSaving(true);
+    console.log('Saving settings:', settings);
+    
     try {
       await updateAppSettings(settings);
       toast({
@@ -53,20 +61,25 @@ const Settings: React.FC = () => {
         description: "Your settings have been saved successfully.",
       });
     } catch (error) {
+      console.error('Error saving settings:', error);
       toast({
         title: "Update failed",
         description: "Failed to save your settings. Please try again.",
         variant: "destructive",
       });
-      console.error(error);
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleExportFormatChange = (format: 'PDF' | 'DOCX') => {
+    console.log('Changing export format to:', format);
     updateSettings({ defaultExportFormat: format });
   };
+
+  console.log('Current settings:', settings);
+  console.log('Current active tab:', activeTab);
+  console.log('isLoading:', isLoading);
 
   if (isLoading) {
     return (
@@ -75,6 +88,40 @@ const Settings: React.FC = () => {
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <h2 className="text-xl font-medium text-gray-700">Loading settings...</h2>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col">
+        <Header />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-xl font-medium text-gray-700 mb-4">Error Loading Settings</h2>
+            <p className="text-red-500">{error}</p>
+            <Button 
+              onClick={() => window.location.reload()} 
+              className="mt-4 bg-hireable-primary hover:bg-hireable-dark"
+            >
+              Retry
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Add a safety check to prevent rendering before settings are loaded
+  if (!settings || !settings.defaultSectionVisibility) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col">
+        <Header />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-xl font-medium text-gray-700">Initializing settings...</h2>
           </div>
         </div>
       </div>
