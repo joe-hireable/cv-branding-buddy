@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { AppSettings, CVSectionVisibility } from '@/types/cv';
+import { AppSettings, CVSectionVisibility, CVSectionOrder } from '@/types/cv';
 import { getAppSettings, updateAppSettings } from '@/services/api';
 import { toast } from '@/components/ui/use-toast';
 

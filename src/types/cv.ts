@@ -128,6 +128,7 @@ export interface RecruiterProfile {
 
 export interface AppSettings {
   defaultSectionVisibility: CVSectionVisibility;
+  defaultSectionOrder: CVSectionOrder;
   defaultAnonymize: boolean;
   keepOriginalFiles: boolean;
   defaultExportFormat: "PDF" | "DOCX";
