@@ -462,7 +462,12 @@ const Preview: React.FC = () => {
           {/* Right column - CV Preview */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-md shadow-sm p-6">
-              <CVPreview cv={cv} isAnonymized={isAnonymized} />
+              <CVPreview 
+                cv={cv} 
+                isAnonymized={isAnonymized} 
+                sectionVisibility={sectionVisibility}
+                sectionOrder={sectionOrder.sections}
+              />
             </div>
           </div>
         </div>
