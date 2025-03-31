@@ -12,14 +12,25 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useRecruiterContext } from '@/contexts/RecruiterContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Header: React.FC = () => {
   const location = useLocation();
   const { profile } = useRecruiterContext();
+  const { user, signOut } = useAuth();
 
   const getInitials = () => {
     if (!profile) return 'U';
     return `${profile.firstName.charAt(0)}${profile.lastName.charAt(0)}`;
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      // Navigation will be handled by the auth state change listener
+    } catch (error) {
+      console.error('Sign out failed:', error);
+    }
   };
 
   return (
@@ -66,7 +77,7 @@ const Header: React.FC = () => {
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
                   <p className="text-sm font-medium leading-none">{profile?.firstName} {profile?.lastName}</p>
-                  <p className="text-xs leading-none text-muted-foreground">{profile?.email}</p>
+                  <p className="text-xs leading-none text-muted-foreground">{profile?.email || user?.email}</p>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
@@ -77,7 +88,7 @@ const Header: React.FC = () => {
                 <Link to="/settings" className="w-full">App Settings</Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={handleSignOut}>
                 Log out
               </DropdownMenuItem>
             </DropdownMenuContent>
