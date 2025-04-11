@@ -340,12 +340,50 @@ export type Database = {
           },
         ]
       }
+      migrations: {
+        Row: {
+          id: string
+          name: string
+          up_sql: string
+          down_sql: string
+          status: string
+          created_at: string
+          applied_at: string | null
+          error_message: string | null
+        }
+        Insert: {
+          id?: string
+          name: string
+          up_sql: string
+          down_sql: string
+          status?: string
+          created_at?: string
+          applied_at?: string | null
+          error_message?: string | null
+        }
+        Update: {
+          id?: string
+          name?: string
+          up_sql?: string
+          down_sql?: string
+          status?: string
+          created_at?: string
+          applied_at?: string | null
+          error_message?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      exec_sql: {
+        Args: {
+          sql: string
+        }
+        Returns: void
+      }
     }
     Enums: {
       analysis_task_type: "ps" | "cs" | "ka" | "role" | "scoring"

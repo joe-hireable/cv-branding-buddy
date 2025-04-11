@@ -51,16 +51,16 @@ export const analysisService = {
     if (error) throw error
   },
 
-  async subscribeToAnalysis(cvId: string, taskType: AnalysisTaskType, callback: (payload: any) => void) {
+  async subscribeToResults(cvId: string, callback: (payload: any) => void) {
     const subscription = createClient()
-      .channel(`analysis_${cvId}_${taskType}`)
+      .channel('analysis_results_changes')
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
           table: 'cv_analysis_results',
-          filter: `cv_id=eq.${cvId} AND task_type=eq.${taskType}`,
+          filter: `cv_id=eq.${cvId}`,
         },
         callback
       )

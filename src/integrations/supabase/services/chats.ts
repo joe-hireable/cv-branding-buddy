@@ -28,30 +28,9 @@ export const chatService = {
     return messages
   },
 
-  async getLatestMessages(cvId: string, limit: number = 50) {
-    const { data: messages, error } = await createClient()
-      .from('cv_chats')
-      .select('*')
-      .eq('cv_id', cvId)
-      .order('timestamp', { ascending: false })
-      .limit(limit)
-
-    if (error) throw error
-    return messages.reverse()
-  },
-
-  async delete(id: number) {
-    const { error } = await createClient()
-      .from('cv_chats')
-      .delete()
-      .eq('id', id)
-
-    if (error) throw error
-  },
-
-  async subscribeToChat(cvId: string, callback: (payload: any) => void) {
+  async subscribeToMessages(cvId: string, callback: (payload: any) => void) {
     const subscription = createClient()
-      .channel(`chat_${cvId}`)
+      .channel('chat_messages_changes')
       .on(
         'postgres_changes',
         {
@@ -67,20 +46,18 @@ export const chatService = {
     return () => subscription.unsubscribe()
   },
 
-  async createAssistantMessage(cvId: string, message: string) {
-    return this.create({
-      cv_id: cvId,
-      message_text: message,
-      sender_type: 'assistant' as ChatSenderType,
-    })
-  },
+  async sendMessage(cvId: string, message: string, senderType: ChatSenderType = 'user') {
+    const { data: chatMessage, error } = await createClient()
+      .from('cv_chats')
+      .insert({
+        cv_id: cvId,
+        message_text: message,
+        sender_type: senderType,
+      })
+      .select()
+      .single()
 
-  async createUserMessage(cvId: string, userId: string, message: string) {
-    return this.create({
-      cv_id: cvId,
-      user_id: userId,
-      message_text: message,
-      sender_type: 'user' as ChatSenderType,
-    })
+    if (error) throw error
+    return chatMessage
   },
 } 

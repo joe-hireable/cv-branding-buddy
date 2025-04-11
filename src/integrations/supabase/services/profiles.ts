@@ -70,16 +70,16 @@ export const profileService = {
     return profiles
   },
 
-  async subscribeToChanges(profileId: string, callback: (payload: any) => void) {
+  async subscribeToChanges(userId: string, callback: (payload: any) => void) {
     const subscription = createClient()
-      .channel(`profile_${profileId}`)
+      .channel('profiles_changes')
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
           table: 'profiles',
-          filter: `id=eq.${profileId}`,
+          filter: `id=eq.${userId}`,
         },
         callback
       )

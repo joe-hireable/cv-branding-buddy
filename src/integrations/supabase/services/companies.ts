@@ -51,7 +51,7 @@ export const companyService = {
 
   async subscribeToChanges(companyId: string, callback: (payload: any) => void) {
     const subscription = createClient()
-      .channel(`company_${companyId}`)
+      .channel('companies_changes')
       .on(
         'postgres_changes',
         {
