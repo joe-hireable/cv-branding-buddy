@@ -4,15 +4,15 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import type { Database } from './types'
 
 // Environment variables for API endpoints
-export const PARSE_CV_ENDPOINT = import.meta.env.VITE_CV_OPTIMIZER_GCF_URL
+export const PARSE_CV_ENDPOINT = "https://europe-west9-hireable-places.cloudfunctions.net/cv_optimizer"
 export const GENERATE_CV_ENDPOINT = "" // To be populated later
 
 // Create and export the Supabase client
 export function createClient() {
-  if (process.env.NODE_ENV === 'test') {
+  if (import.meta.env.MODE === 'test') {
     return createSupabaseClient<Database>(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      import.meta.env.VITE_SUPABASE_URL,
+      import.meta.env.VITE_SUPABASE_ANON_KEY
     )
   }
 

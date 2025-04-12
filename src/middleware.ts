@@ -1,69 +1,59 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
-import { NextResponse, type NextRequest } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
 
-export async function middleware(req: NextRequest) {
-  let response = NextResponse.next({
-    request: {
-      headers: req.headers,
-    },
-  })
+declare const __VITE_SUPABASE_URL__: string
+declare const __VITE_SUPABASE_ANON_KEY__: string
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return req.cookies.get(name)?.value
-        },
-        set(name: string, value: string, options: CookieOptions) {
-          response.cookies.set({
-            name,
-            value,
-            ...options,
-          })
-        },
-        remove(name: string, options: CookieOptions) {
-          response.cookies.set({
-            name,
-            value: '',
-            ...options,
-          })
-        },
-      },
-    }
-  )
+const supabaseUrl = __VITE_SUPABASE_URL__
+const supabaseAnonKey = __VITE_SUPABASE_ANON_KEY__
 
-  // Refresh session if expired
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
+console.log('Supabase URL:', supabaseUrl)
+console.log('Supabase Key:', supabaseAnonKey ? '[EXISTS]' : '[MISSING]')
 
-  // Protected routes that require authentication
-  const protectedRoutes = ['/dashboard', '/candidates', '/settings']
-  const isProtectedRoute = protectedRoutes.some(route => 
-    req.nextUrl.pathname.startsWith(route)
-  )
+// Create a Supabase client for auth checks
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('Missing Supabase environment variables')
+  throw new Error('Missing Supabase environment variables')
+}
 
-  // Auth routes that should redirect to dashboard if already authenticated
-  const authRoutes = ['/login', '/signup', '/forgot-password']
-  const isAuthRoute = authRoutes.some(route => 
-    req.nextUrl.pathname.startsWith(route)
-  )
+const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
-  if (isProtectedRoute && !session) {
+// Protected routes that require authentication
+const protectedRoutes = ['/dashboard', '/candidates', '/settings']
+const authRoutes = ['/login', '/signup', '/forgot-password']
+
+// Function to check if a path is protected
+export function isProtectedRoute(path: string): boolean {
+  return protectedRoutes.some(route => path.startsWith(route))
+}
+
+// Function to check if a path is an auth route
+export function isAuthRoute(path: string): boolean {
+  return authRoutes.some(route => path.startsWith(route))
+}
+
+// Function to check authentication status
+export async function checkAuth() {
+  const { data: { session } } = await supabase.auth.getSession()
+  return session
+}
+
+// Function to handle protected route access
+export async function handleProtectedRoute(path: string) {
+  const session = await checkAuth()
+  
+  if (isProtectedRoute(path) && !session) {
     // Redirect to login if accessing protected route without session
-    const redirectUrl = new URL('/login', req.url)
-    redirectUrl.searchParams.set('redirectedFrom', req.nextUrl.pathname)
-    return NextResponse.redirect(redirectUrl)
+    window.location.href = `/login?redirectedFrom=${encodeURIComponent(path)}`
+    return false
   }
 
-  if (isAuthRoute && session) {
+  if (isAuthRoute(path) && session) {
     // Redirect to dashboard if accessing auth route with active session
-    return NextResponse.redirect(new URL('/dashboard', req.url))
+    window.location.href = '/dashboard'
+    return false
   }
 
-  return response
+  return true
 }
 
 export const config = {
