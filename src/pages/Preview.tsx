@@ -27,13 +27,21 @@ import {
 } from '@/services/api';
 import { toast } from '@/components/ui/use-toast';
 
-const Preview: React.FC = () => {
+const Preview = (): JSX.Element => {
   const [isOptimizingProfileStatement, setIsOptimizingProfileStatement] = useState(false);
   const [isOptimizingSkills, setIsOptimizingSkills] = useState(false);
   const [isOptimizingAchievements, setIsOptimizingAchievements] = useState(false);
   const [optimizingExperienceIndex, setOptimizingExperienceIndex] = useState<number | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  
+  // Add state for tracking original and optimized content
+  const [optimizedContent, setOptimizedContent] = useState<{
+    profileStatement?: { original: string; optimized: string; feedback: string };
+    skills?: { original: any[]; optimized: any[]; feedback: string };
+    achievements?: { original: string[]; optimized: string[]; feedback: string };
+    experience?: { [key: number]: { original: any; optimized: any; feedback: string } };
+  }>({});
   
   const {
     cv,
@@ -60,19 +68,46 @@ const Preview: React.FC = () => {
     [sectionOrder, setSectionOrder]
   );
 
+  const formatFeedback = (feedback: any): string => {
+    if (!feedback) return 'Operation completed successfully';
+    if (typeof feedback === 'string') return feedback;
+    if (feedback.strengths && feedback.areas_to_improve) {
+      return `Strengths: ${feedback.strengths}\nAreas to improve: ${feedback.areas_to_improve}`;
+    }
+    return 'Operation completed successfully';
+  };
+
   const handleOptimizeProfileStatement = async () => {
     if (!cv) return;
     
     setIsOptimizingProfileStatement(true);
     
     try {
-      const response = await optimizeProfileStatement('mock-cv-id');
+      // If we have a CV file in the context, use it
+      const cvInput = cv.file || cv.id;
+      if (!cvInput) {
+        throw new Error('No CV file or ID available');
+      }
+
+      const response = await optimizeProfileStatement(
+        cvInput,
+        cv.jobDescription // Pass job description if available
+      );
       
       if (response.status === 'success') {
-        updateCvField('profileStatement', response.data.optimizedText);
+        // Store both original and optimized content
+        setOptimizedContent(prev => ({
+          ...prev,
+          profileStatement: {
+            original: cv.profileStatement,
+            optimized: response.data.optimizedText,
+            feedback: formatFeedback(response.data.feedback)
+          }
+        }));
+        
         toast({
           title: "Profile statement optimized",
-          description: response.data.feedback,
+          description: formatFeedback(response.data.feedback),
         });
       } else {
         throw new Error(response.errors?.[0] || 'Failed to optimize profile statement');
@@ -94,13 +129,30 @@ const Preview: React.FC = () => {
     setIsOptimizingSkills(true);
     
     try {
-      const response = await optimizeSkills('mock-cv-id');
+      const cvInput = cv.file || cv.id;
+      if (!cvInput) {
+        throw new Error('No CV file or ID available');
+      }
+
+      const response = await optimizeSkills(
+        cvInput,
+        cv.jobDescription
+      );
       
       if (response.status === 'success') {
-        updateCvField('skills', response.data.optimizedSkills);
+        // Store both original and optimized content
+        setOptimizedContent(prev => ({
+          ...prev,
+          skills: {
+            original: cv.skills,
+            optimized: response.data.optimizedSkills,
+            feedback: formatFeedback(response.data.feedback)
+          }
+        }));
+        
         toast({
           title: "Skills optimized",
-          description: response.data.feedback,
+          description: formatFeedback(response.data.feedback),
         });
       } else {
         throw new Error(response.errors?.[0] || 'Failed to optimize skills');
@@ -122,13 +174,30 @@ const Preview: React.FC = () => {
     setIsOptimizingAchievements(true);
     
     try {
-      const response = await optimizeAchievements('mock-cv-id');
+      const cvInput = cv.file || cv.id;
+      if (!cvInput) {
+        throw new Error('No CV file or ID available');
+      }
+
+      const response = await optimizeAchievements(
+        cvInput,
+        cv.jobDescription
+      );
       
       if (response.status === 'success') {
-        updateCvField('achievements', response.data.optimizedAchievements);
+        // Store both original and optimized content
+        setOptimizedContent(prev => ({
+          ...prev,
+          achievements: {
+            original: cv.achievements,
+            optimized: response.data.optimizedAchievements,
+            feedback: formatFeedback(response.data.feedback)
+          }
+        }));
+        
         toast({
           title: "Achievements optimized",
-          description: response.data.feedback,
+          description: formatFeedback(response.data.feedback),
         });
       } else {
         throw new Error(response.errors?.[0] || 'Failed to optimize achievements');
@@ -150,19 +219,34 @@ const Preview: React.FC = () => {
     setOptimizingExperienceIndex(index);
     
     try {
-      const response = await optimizeExperience('mock-cv-id', index);
+      const cvInput = cv.file || cv.id;
+      if (!cvInput) {
+        throw new Error('No CV file or ID available');
+      }
+
+      const response = await optimizeExperience(
+        cvInput,
+        index,
+        cv.jobDescription
+      );
       
       if (response.status === 'success') {
-        const updatedExperiences = [...cv.experience];
-        updatedExperiences[index] = {
-          ...updatedExperiences[index],
-          highlights: response.data.optimizedExperience.highlights,
-        };
+        // Store both original and optimized content
+        setOptimizedContent(prev => ({
+          ...prev,
+          experience: {
+            ...prev.experience,
+            [index]: {
+              original: cv.experience[index],
+              optimized: response.data.optimizedExperience,
+              feedback: formatFeedback(response.data.feedback)
+            }
+          }
+        }));
         
-        updateCvField('experience', updatedExperiences);
         toast({
           title: "Experience optimized",
-          description: response.data.feedback,
+          description: formatFeedback(response.data.feedback),
         });
       } else {
         throw new Error(response.errors?.[0] || 'Failed to optimize experience');
@@ -201,6 +285,257 @@ const Preview: React.FC = () => {
       });
     } finally {
       setIsExporting(false);
+    }
+  };
+
+  const handleAcceptChange = (section: string, index?: number) => {
+    if (!cv) return;
+
+    switch (section) {
+      case 'profileStatement':
+        if (optimizedContent.profileStatement) {
+          updateCvField('profileStatement', optimizedContent.profileStatement.optimized);
+          setOptimizedContent(prev => ({ ...prev, profileStatement: undefined }));
+        }
+        break;
+      case 'skills':
+        if (optimizedContent.skills) {
+          updateCvField('skills', optimizedContent.skills.optimized);
+          setOptimizedContent(prev => ({ ...prev, skills: undefined }));
+        }
+        break;
+      case 'achievements':
+        if (optimizedContent.achievements) {
+          updateCvField('achievements', optimizedContent.achievements.optimized);
+          setOptimizedContent(prev => ({ ...prev, achievements: undefined }));
+        }
+        break;
+      case 'experience':
+        if (index !== undefined && optimizedContent.experience?.[index]) {
+          const updatedExperiences = [...cv.experience];
+          updatedExperiences[index] = {
+            ...updatedExperiences[index],
+            highlights: optimizedContent.experience[index].optimized.highlights,
+          };
+          updateCvField('experience', updatedExperiences);
+          setOptimizedContent(prev => ({
+            ...prev,
+            experience: {
+              ...prev.experience,
+              [index]: undefined
+            }
+          }));
+        }
+        break;
+    }
+  };
+
+  const handleRevertChange = (section: string, index?: number) => {
+    switch (section) {
+      case 'profileStatement':
+        setOptimizedContent(prev => ({ ...prev, profileStatement: undefined }));
+        break;
+      case 'skills':
+        setOptimizedContent(prev => ({ ...prev, skills: undefined }));
+        break;
+      case 'achievements':
+        setOptimizedContent(prev => ({ ...prev, achievements: undefined }));
+        break;
+      case 'experience':
+        if (index !== undefined) {
+          setOptimizedContent(prev => ({
+            ...prev,
+            experience: {
+              ...prev.experience,
+              [index]: undefined
+            }
+          }));
+        }
+        break;
+    }
+  };
+
+  const renderSectionContent = (sectionKey: string, index?: number) => {
+    switch(sectionKey) {
+      case 'profileStatement':
+        return (
+          <div className="space-y-4">
+            <div className="text-sm">
+              <h4 className="font-medium mb-2">Current Content:</h4>
+              <p className="text-gray-600">{cv.profileStatement}</p>
+            </div>
+            {optimizedContent.profileStatement && (
+              <div className="space-y-2">
+                <h4 className="font-medium">Suggested Changes:</h4>
+                <p className="text-gray-600">{optimizedContent.profileStatement.optimized}</p>
+                <p className="text-sm text-gray-500">{optimizedContent.profileStatement.feedback}</p>
+                <div className="flex space-x-2">
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => handleAcceptChange('profileStatement')}
+                  >
+                    Accept Changes
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleRevertChange('profileStatement')}
+                  >
+                    Revert
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+
+      case 'skills':
+        return (
+          <div className="space-y-4">
+            <div className="text-sm">
+              <h4 className="font-medium mb-2">Current Skills:</h4>
+              <div className="flex flex-wrap gap-1">
+                {cv.skills.map((skill, idx) => (
+                  <div key={idx} className="text-xs bg-gray-100 px-2 py-1 rounded">
+                    {skill.name}
+                  </div>
+                ))}
+              </div>
+            </div>
+            {optimizedContent.skills && (
+              <div className="space-y-2">
+                <h4 className="font-medium">Suggested Skills:</h4>
+                <div className="flex flex-wrap gap-1">
+                  {optimizedContent.skills.optimized.map((skill, idx) => (
+                    <div key={idx} className="text-xs bg-gray-100 px-2 py-1 rounded">
+                      {skill.name}
+                    </div>
+                  ))}
+                </div>
+                <p className="text-sm text-gray-500">{optimizedContent.skills.feedback}</p>
+                <div className="flex space-x-2">
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => handleAcceptChange('skills')}
+                  >
+                    Accept Changes
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleRevertChange('skills')}
+                  >
+                    Revert
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+
+      case 'achievements':
+        return (
+          <div className="space-y-4">
+            <div className="text-sm">
+              <h4 className="font-medium mb-2">Current Achievements:</h4>
+              <ul className="list-disc pl-5 text-gray-600">
+                {cv.achievements.map((achievement, idx) => (
+                  <li key={idx}>{achievement}</li>
+                ))}
+              </ul>
+            </div>
+            {optimizedContent.achievements && (
+              <div className="space-y-2">
+                <h4 className="font-medium">Suggested Achievements:</h4>
+                <ul className="list-disc pl-5 text-gray-600">
+                  {optimizedContent.achievements.optimized.map((achievement, idx) => (
+                    <li key={idx}>{achievement}</li>
+                  ))}
+                </ul>
+                <p className="text-sm text-gray-500">{optimizedContent.achievements.feedback}</p>
+                <div className="flex space-x-2">
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => handleAcceptChange('achievements')}
+                  >
+                    Accept Changes
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleRevertChange('achievements')}
+                  >
+                    Revert
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+
+      case 'experience':
+        return (
+          <div className="space-y-4">
+            {cv.experience.map((exp, idx) => (
+              <div key={idx} className="space-y-4">
+                <div className="text-sm">
+                  <div className="flex justify-between">
+                    <h4 className="font-medium">{exp.title}</h4>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 px-2 text-xs"
+                      onClick={() => handleOptimizeExperience(idx)}
+                      disabled={optimizingExperienceIndex === idx}
+                    >
+                      {optimizingExperienceIndex === idx ? 'Optimizing...' : 'Optimize'}
+                    </Button>
+                  </div>
+                  <p className="text-gray-500 text-xs">{exp.company}</p>
+                  <ul className="list-disc pl-5 text-gray-600 mt-2">
+                    {exp.highlights && exp.highlights.map((highlight, hIdx) => (
+                      <li key={hIdx}>{highlight}</li>
+                    ))}
+                  </ul>
+                </div>
+                {optimizedContent.experience?.[idx] && (
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Suggested Changes:</h4>
+                    <ul className="list-disc pl-5 text-gray-600">
+                      {optimizedContent.experience[idx].optimized.highlights && 
+                        optimizedContent.experience[idx].optimized.highlights.map((highlight, hIdx) => (
+                          <li key={hIdx}>{highlight}</li>
+                        ))}
+                    </ul>
+                    <p className="text-sm text-gray-500">{optimizedContent.experience[idx].feedback}</p>
+                    <div className="flex space-x-2">
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={() => handleAcceptChange('experience', idx)}
+                      >
+                        Accept Changes
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleRevertChange('experience', idx)}
+                      >
+                        Revert
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        );
+
+      default:
+        return null;
     }
   };
 
@@ -310,116 +645,35 @@ const Preview: React.FC = () => {
               <div className="space-y-3">
                 {sectionOrder.sections.map((sectionKey, index) => {
                   let sectionTitle = '';
-                  let sectionContent = null;
                   let canOptimize = false;
                   const isVisible = sectionVisibility[sectionKey as keyof typeof sectionVisibility];
                   
                   switch(sectionKey) {
                     case 'personalInfo':
                       sectionTitle = 'Personal Information';
-                      sectionContent = (
-                        <div className="text-sm">
-                          <p className="font-medium">Name</p>
-                          <p className="text-gray-500">{isAnonymized ? '[Anonymized]' : `${cv.firstName || ''} ${cv.surname || ''}`}</p>
-                          
-                          <p className="font-medium mt-2">Contact</p>
-                          <p className="text-gray-500">{isAnonymized ? '[Hidden]' : (cv.email || cv.phone || 'No contact info')}</p>
-                        </div>
-                      );
                       break;
-                    
                     case 'profileStatement':
                       sectionTitle = 'Professional Summary';
                       canOptimize = true;
-                      sectionContent = (
-                        <p className="text-sm text-gray-600 line-clamp-3">{cv.profileStatement}</p>
-                      );
                       break;
-                    
                     case 'skills':
                       sectionTitle = 'Skills';
                       canOptimize = true;
-                      sectionContent = (
-                        <div className="flex flex-wrap gap-1">
-                          {cv.skills.slice(0, 3).map((skill, idx) => (
-                            <div key={idx} className="text-xs bg-gray-100 px-2 py-1 rounded">
-                              {skill.name}
-                            </div>
-                          ))}
-                          {cv.skills.length > 3 && (
-                            <div className="text-xs bg-gray-100 px-2 py-1 rounded">
-                              +{cv.skills.length - 3} more
-                            </div>
-                          )}
-                        </div>
-                      );
                       break;
-                    
                     case 'experience':
                       sectionTitle = 'Work Experience';
-                      sectionContent = (
-                        <div className="space-y-2">
-                          {cv.experience.map((exp, idx) => (
-                            <div key={idx} className="text-sm">
-                              <div className="flex justify-between">
-                                <p className="font-medium">{exp.title}</p>
-                                <Button
-                                  variant="ghost" 
-                                  size="sm"
-                                  className="h-6 px-2 text-xs"
-                                  onClick={() => handleOptimizeExperience(idx)}
-                                  disabled={optimizingExperienceIndex === idx}
-                                >
-                                  {optimizingExperienceIndex === idx ? 'Optimizing...' : 'Optimize'}
-                                </Button>
-                              </div>
-                              <p className="text-gray-500 text-xs">{exp.company}</p>
-                            </div>
-                          ))}
-                        </div>
-                      );
                       break;
-                    
                     case 'achievements':
                       sectionTitle = 'Key Achievements';
                       canOptimize = true;
-                      sectionContent = (
-                        <ul className="text-sm text-gray-600 ml-4 list-disc">
-                          {cv.achievements.slice(0, 2).map((achievement, idx) => (
-                            <li key={idx} className="line-clamp-1">{achievement}</li>
-                          ))}
-                          {cv.achievements.length > 2 && (
-                            <li className="text-gray-400">+{cv.achievements.length - 2} more achievements</li>
-                          )}
-                        </ul>
-                      );
                       break;
-                    
                     case 'education':
                       sectionTitle = 'Education';
-                      sectionContent = (
-                        <div className="text-sm">
-                          {cv.education && cv.education.map((edu, idx) => (
-                            <div key={idx} className="mb-1">
-                              <p className="font-medium">{edu.institution}</p>
-                              {edu.qualifications && edu.qualifications[0] && (
-                                <p className="text-gray-500 text-xs">
-                                  {edu.qualifications[0].qualification} in {edu.qualifications[0].course}
-                                </p>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      );
                       break;
-                    
                     default:
                       sectionTitle = sectionKey
                         .replace(/([A-Z])/g, ' $1')
                         .replace(/^./, str => str.toUpperCase());
-                      sectionContent = (
-                        <p className="text-sm text-gray-500">Section preview not available</p>
-                      );
                   }
                   
                   return (
@@ -451,7 +705,7 @@ const Preview: React.FC = () => {
                       index={index}
                       moveSection={moveSection}
                     >
-                      {sectionContent}
+                      {renderSectionContent(sectionKey)}
                     </CVSection>
                   );
                 })}

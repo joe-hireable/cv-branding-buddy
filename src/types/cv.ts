@@ -1,4 +1,3 @@
-
 export interface Link {
   title: string | null;
   url: string | null;
@@ -76,6 +75,9 @@ export interface Publication {
 }
 
 export interface CV {
+  id?: string;
+  file?: File;
+  jobDescription?: string;
   firstName: string | null;
   surname: string | null;
   email: string | null;

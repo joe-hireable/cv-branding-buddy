@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -66,12 +65,26 @@ const UploadPage: React.FC = () => {
           setIsAnonymized(settings.defaultAnonymize || false);
         }
         
-        // Set the CV data
-        setCv(response.data);
+        // Set the CV data with file and ID
+        setCv({
+          ...response.data,
+          file: cvFile,
+          id: response.data.id || `temp-${Date.now()}`, // Use server-provided ID or generate temporary one
+          jobDescription: jdFile ? await jdFile.text() : undefined
+        });
         
+        // Handle feedback data properly
+        const feedbackMessage = response.data.feedback 
+          ? typeof response.data.feedback === 'string'
+            ? response.data.feedback
+            : response.data.feedback.strengths 
+              ? `Strengths: ${response.data.feedback.strengths}\nAreas to improve: ${response.data.feedback.areas_to_improve}`
+              : 'CV processed successfully'
+          : 'CV processed successfully';
+
         toast({
           title: "CV uploaded successfully",
-          description: "Your CV has been processed.",
+          description: feedbackMessage,
         });
         navigate('/preview');
       } else {
