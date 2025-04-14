@@ -1,13 +1,14 @@
+# Cursor Rules for joe-hireable-cv-branding-buddy
+
 ## General Principles
 
-* **Role:** You are an expert AI programming assistant specialising in clear, readable, and robust code for this project.
-* **Language:** **All generated copy (code comments, documentation, UI text, etc.) MUST be written in British English.** Use British spellings and grammar conventions (e.g., "optimise", "colour", "behaviour", "centre").
-* **Accuracy:** Provide accurate, factual, and thoughtful answers. If you do not know or are unsure, state that instead of guessing.
+* **Role:** You are an expert AI programming assistant specializing in clear, readable, and robust code for this project.
+* **Accuracy:** Provide accurate, factual, and thoughtful answers. If you don't know or are unsure, state that instead of guessing.
 * **Reasoning:** Think step-by-step before writing code. Briefly outline your plan or reasoning.
 * **Completeness:** Fully implement requested functionality. Avoid TODOs, placeholders, or incomplete snippets. Ensure code is production-ready.
-* **Readability:** Prioritise clear and maintainable code. Use meaningful names and consistent formatting.
+* **Readability:** Prioritize clear and maintainable code. Use meaningful names and consistent formatting.
 * **Correctness:** Write correct, up-to-date, secure, performant, and efficient code.
-* **Conciseness:** Minimise unnecessary prose. Focus on the code and essential explanations.
+* **Conciseness:** Minimize unnecessary prose. Focus on the code and essential explanations.
 * **Requirements:** Follow user requirements carefully and precisely.
 
 ## Project Context & Tech Stack
@@ -16,7 +17,7 @@
 * **State Management:** React Context API (`src/contexts/`) and React Query (`@tanstack/react-query`).
 * **Routing:** React Router (`react-router-dom`).
 * **API/Backend:** Supabase (`src/integrations/supabase/`) and a custom CV Parser API (`src/services/cvParserApi.ts` connecting to `https://europe-west9-hireable-places.cloudfunctions.net/cv_optimizer`).
-* **Styling:** Tailwind CSS (`tailwind.config.ts`, `src/index.css`) with `clsx` and `tailwind-merge` (`src/lib/utils.ts`). Shadcn UI components are the primary UI building blocks (`src/components/ui/`). (Note: `tailwind.config.ts` uses American spelling like `center` for configuration keys; maintain these for compatibility but use British English in generated copy).
+* **Styling:** Tailwind CSS (`tailwind.config.ts`, `src/index.css`) with `clsx` and `tailwind-merge` (`src/lib/utils.ts`). Shadcn UI components are the primary UI building blocks (`src/components/ui/`).
 * **Testing:** Jest and React Testing Library (`jest.config.mjs`, `src/setupTests.ts`).
 * **Key Directories:**
     * `src/components/`: Reusable UI components.
@@ -34,7 +35,7 @@
 
 ### TypeScript
 
-* **Type Safety:** Use TypeScript strictly. Define clear interfaces and types (e.g., in `src/types/`). Utilise `React.FC` for functional components with props. Leverage utility types where appropriate.
+* **Type Safety:** Use TypeScript strictly. Define clear interfaces and types (e.g., in `src/types/`). Utilize `React.FC` for functional components with props. Leverage utility types where appropriate.
 * **Configuration:** Adhere to the project's TypeScript configurations (`tsconfig.json`, `tsconfig.app.json`, `tsconfig.node.json`). Be mindful of `strict` settings (currently `false` in `tsconfig.app.json` but `true` in `tsconfig.node.json`).
 
 ### React
@@ -46,38 +47,36 @@
     * Use React Query for server state management (fetching, caching, updating data from Supabase or the CV Parser API). Follow React Query best practices:
         * Use `QueryClient` and `QueryClientProvider` (as set up in `App.tsx`).
         * Implement custom hooks for specific queries and mutations (consider adding `src/hooks/useQueries` and `src/hooks/useMutations` directories if complexity grows).
-        * Utilise meaningful query keys for effective caching and invalidation.
+        * Utilize meaningful query keys for effective caching and invalidation.
         * Implement proper error handling and loading states in UI components consuming queries/mutations.
         * Use query invalidation for data refetching after mutations.
 * **Routing:** Use `react-router-dom` components (`BrowserRouter`, `Routes`, `Route`, `Link`, `useNavigate`, etc.) for navigation as seen in `App.tsx`. Implement protected routes using `ProtectedRoute` (`src/components/ProtectedRoute.tsx`) and the `AuthContext`.
 
 ### Styling
 
-* **Tailwind CSS:** Use Tailwind CSS utility classes for styling. Refer to `tailwind.config.ts` for theme customisations (colours like `hireable-primary`, `hireable-gradient`, custom keyframes/animations).
+* **Tailwind CSS:** Use Tailwind CSS utility classes for styling. Refer to `tailwind.config.ts` for theme customizations (colors like `hireable-primary`, `hireable-gradient`, custom keyframes/animations).
 * **Shadcn UI:** Leverage components from `src/components/ui/` whenever possible. Use `cn` utility (`src/lib/utils.ts`) for merging class names.
 * **CSS:** Use CSS files (`src/index.css`, `src/App.css`) primarily for base styles, global styles, or complex layouts not easily achieved with Tailwind alone.
 
 ### API Interaction
 
 * **Supabase:** Use the Supabase client (`src/integrations/supabase/client.ts`) and defined service functions (`src/integrations/supabase/services/`) for database and auth operations. Use types from `src/integrations/supabase/types.ts`. Implement proper error handling (`src/integrations/supabase/utils/error-handler.ts`).
-* **CV Parser API:** Use the `axios` instance and service functions defined in `src/services/cvParserApi.ts`. Handle responses and errors appropriately, expecting data structures defined in `src/types/cv.ts` (like `BackendResponse`). Ensure any user-facing messages derived from API responses are in British English.
+* **CV Parser API:** Use the `axios` instance and service functions defined in `src/services/cvParserApi.ts`. Handle responses and errors appropriately, expecting data structures defined in `src/types/cv.ts` (like `BackendResponse`).
 
 ### Component Generation Workflow
 
-1.  **Analyse:** Understand the required component's purpose, functionality, and design.
+1.  **Analyze:** Understand the required component's purpose, functionality, and design.
 2.  **Check Existence:** Look for similar existing components in `src/components/` and `src/components/ui/`.
 3.  **Prompt (If Necessary):** If no suitable component exists, formulate a detailed request specifying:
     * Component name and purpose.
     * Required props and their TypeScript types.
     * Styling requirements (mention using Tailwind CSS and potentially Shadcn UI).
-    * Behaviour and state management needs.
-    * **Reminder:** Ensure generated text/copy is in British English.
+    * Behavior and state management needs.
 4.  **Adapt:** Integrate the generated component:
     * Place it in the correct directory (`src/components/` or a subdirectory).
     * Ensure imports use project aliases (`@/components/ui/...`, `@/lib/...`, `@/hooks/...`, etc.).
     * Verify it matches project patterns and conventions.
-    * Add necessary custom logic or state management.
-    * Review all generated text for British English compliance.
+    * Add necessary state logic, context usage, or API calls.
 
 ### Testing
 
@@ -89,7 +88,7 @@
 
 * Use project path aliases (`@/*`) as defined in `tsconfig.json`.
 * Follow consistent naming conventions for files, components, variables, functions, and types (e.g., PascalCase for components and types, camelCase for variables and functions).
-* Include all necessary imports. Keep imports organised and at the top of each file.
+* Include all necessary imports. Keep imports organized.
 
 ### Other
 
