@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -49,24 +48,21 @@ const SignUp = () => {
             className="absolute left-4 top-4"
             size="icon"
           >
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowLeft className="h-4 w-4" />
           </Button>
-          <div className="w-12 h-12 mx-auto rounded bg-hireable-gradient flex items-center justify-center mb-6">
-            <span className="text-white font-bold text-2xl">H</span>
-          </div>
-          <CardTitle className="text-3xl font-bold">Create account</CardTitle>
+          <CardTitle>Create an Account</CardTitle>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit}>
+          <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                autoComplete="email"
               />
             </div>
             <div className="space-y-2">
@@ -74,43 +70,50 @@ const SignUp = () => {
               <Input
                 id="password"
                 type="password"
-                placeholder="Create a password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                autoComplete="new-password"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="confirm-password">Confirm Password</Label>
+              <Label htmlFor="confirmPassword">Confirm Password</Label>
               <Input
-                id="confirm-password"
+                id="confirmPassword"
                 type="password"
-                placeholder="Confirm your password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
+                autoComplete="new-password"
               />
             </div>
             {error && (
-              <div className="text-red-500 text-sm">{error}</div>
+              <div className="text-sm text-destructive">{error}</div>
             )}
-            <Button type="submit" className="w-full" disabled={loading}>
+          </CardContent>
+          <CardFooter className="flex flex-col space-y-4">
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={loading}
+            >
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating account...
+                  Creating Account...
                 </>
               ) : (
-                'Create account'
+                'Create Account'
               )}
             </Button>
-          </form>
-        </CardContent>
-        <CardFooter className="justify-center">
-          <div>
-            Already have an account? <Link to="/auth/login" className="text-primary font-medium">Sign in</Link>
-          </div>
-        </CardFooter>
+            <div className="text-sm text-muted-foreground text-center">
+              Already have an account?{' '}
+              <Link to="/auth/login" className="text-primary hover:underline">
+                Sign in
+              </Link>
+            </div>
+          </CardFooter>
+        </form>
       </Card>
     </div>
   );

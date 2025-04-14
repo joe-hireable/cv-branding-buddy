@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { AppSettings, CVSectionVisibility, CVSectionOrder } from '@/types/cv';
 import { getAppSettings, updateAppSettings } from '@/services/api';
@@ -54,15 +53,17 @@ const defaultSettings: AppSettings = {
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
 
-export const useSettingsContext = () => {
+// Define the hook separately
+function useSettingsContext() {
   const context = useContext(SettingsContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useSettingsContext must be used within a SettingsProvider');
   }
   return context;
-};
+}
 
-export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+// Define the provider component
+function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<AppSettings>(defaultSettings);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -167,4 +168,7 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
       {children}
     </SettingsContext.Provider>
   );
-};
+}
+
+// Export both the provider and the hook
+export { SettingsProvider, useSettingsContext };

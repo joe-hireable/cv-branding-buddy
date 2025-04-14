@@ -1,4 +1,54 @@
 import '@testing-library/jest-dom';
+import { cleanup } from '@testing-library/react';
+
+// Cleanup after each test case (e.g. clearing jsdom)
+afterEach(() => {
+  cleanup();
+});
+
+// Mock import.meta.env
+Object.defineProperty(globalThis, 'import.meta', {
+  value: {
+    env: {
+      VITE_SUPABASE_URL: process.env.VITE_SUPABASE_URL || 'https://test-supabase-url.com',
+      VITE_SUPABASE_ANON_KEY: process.env.VITE_SUPABASE_ANON_KEY || 'test-anon-key',
+      VITE_SUPABASE_SERVICE_ROLE_KEY: process.env.VITE_SUPABASE_SERVICE_ROLE_KEY || 'test-service-role-key',
+      MODE: 'test',
+      DEV: false,
+      PROD: false,
+      SSR: false
+    }
+  }
+});
+
+// Mock Vite's import.meta.env
+const env = {
+  MODE: 'test',
+  VITE_SUPABASE_URL: process.env.VITE_SUPABASE_URL || 'https://test-supabase-url.com',
+  VITE_SUPABASE_ANON_KEY: process.env.VITE_SUPABASE_ANON_KEY || 'test-anon-key',
+  VITE_CV_OPTIMIZER_GCF_URL: process.env.VITE_CV_OPTIMIZER_GCF_URL || 'https://test-optimizer.com'
+};
+
+// Better handling of import.meta.env
+global.import = {
+  meta: {
+    env: {
+      VITE_SUPABASE_URL: process.env.VITE_SUPABASE_URL,
+      VITE_SUPABASE_ANON_KEY: process.env.VITE_SUPABASE_ANON_KEY,
+      VITE_SUPABASE_SERVICE_ROLE_KEY: process.env.VITE_SUPABASE_SERVICE_ROLE_KEY,
+      MODE: 'test',
+      DEV: false,
+      PROD: false,
+      SSR: false
+    }
+  }
+} as any;
+
+// Ensure process.env has the same values
+process.env.MODE = 'test';
+process.env.VITE_SUPABASE_URL = process.env.VITE_SUPABASE_URL || 'https://test-supabase-url.com';
+process.env.VITE_SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY || 'test-anon-key';
+process.env.VITE_CV_OPTIMIZER_GCF_URL = process.env.VITE_CV_OPTIMIZER_GCF_URL || 'https://test-optimizer.com';
 
 // Mock window.crypto.randomUUID
 Object.defineProperty(window, 'crypto', {
@@ -94,8 +144,29 @@ class MockFile {
 // @ts-ignore - Ignore type mismatch for testing purposes
 global.File = MockFile;
 
+// Mock window.matchMedia
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: jest.fn().mockImplementation(query => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: jest.fn(), // Deprecated
+    removeListener: jest.fn(), // Deprecated
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
+    dispatchEvent: jest.fn(),
+  })),
+});
+
 // Cleanup
 afterAll(() => {
   global.FormData = originalFormData;
   global.File = originalFile;
-}); 
+});
+
+// Set up test environment
+process.env.NODE_ENV = 'test';
+process.env.VITE_SUPABASE_URL = 'https://test-supabase-url.com';
+process.env.VITE_SUPABASE_ANON_KEY = 'test-anon-key';
+process.env.VITE_SUPABASE_SERVICE_ROLE_KEY = 'test-service-role-key'; 

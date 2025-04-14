@@ -1,6 +1,5 @@
 import axios from 'axios';
-import { supabase } from '@/integrations/supabase/client';
-import { PARSE_CV_ENDPOINT } from '@/integrations/supabase/client';
+import { supabase, PARSE_CV_ENDPOINT } from '@/integrations/supabase/supabaseClient';
 import type { BackendResponse } from '@/types/cv';
 
 // Create axios instance for CV Parser API
@@ -101,19 +100,87 @@ export const cvParserService = {
       // Handle CV input - either as File or ID
       if (cv instanceof File) {
         formData.append('cv_file', cv);
-      } else {
+      } else if (typeof cv === 'string') {
         formData.append('cv_id', cv);
+      } else {
+        throw new Error('Invalid CV input: must be either a File or string ID');
       }
       
       if (jobDescription) {
         formData.append('jd', jobDescription);
       }
 
+      // Log the request payload for debugging
+      console.debug('Profile statement optimization request:', {
+        task: 'ps',
+        cvType: cv instanceof File ? 'file' : 'id',
+        hasJobDescription: !!jobDescription
+      });
+
       const response = await cvParserApi.post<BackendResponse>('', formData);
+      
+      // Log the full response for debugging
+      console.debug('Profile statement optimization response:', response.data);
+      
+      // Validate response structure
+      if (!response.data) {
+        throw new Error('Empty response received from server');
+      }
+
+      if (typeof response.data !== 'object') {
+        throw new Error('Invalid response format: expected an object');
+      }
+
+      if (response.data.status === 'error') {
+        if (response.data.errors?.length > 0) {
+          throw new Error(response.data.errors[0]);
+        }
+        throw new Error('Server returned an error status without details');
+      }
+
+      // Check if we have the expected data structure
+      if (!response.data.data) {
+        throw new Error('Invalid response format: missing data object in response');
+      }
+      
+      // If optimizedText is missing, try to extract it from the response
+      if (!response.data.data.optimizedText) {
+        console.warn('Response missing optimizedText field:', response.data);
+        
+        // Try to find the optimized text in the response
+        if (response.data.data.profileStatement) {
+          // If we have a profileStatement field, use that
+          response.data.data.optimizedText = response.data.data.profileStatement;
+        } else if (response.data.data.text) {
+          // If we have a text field, use that
+          response.data.data.optimizedText = response.data.data.text;
+        } else if (response.data.data.optimized) {
+          // If we have an optimized field, use that
+          response.data.data.optimizedText = response.data.data.optimized;
+        } else {
+          // If we can't find any suitable field, throw an error
+          throw new Error('Invalid response format: missing optimizedText in response data');
+        }
+      }
+
       return response.data;
-    } catch (error) {
-      console.error('Profile statement optimization error:', error);
-      throw error;
+    } catch (error: any) {
+      console.error('Profile statement optimization error:', {
+        error,
+        response: error.response?.data,
+        status: error.response?.status,
+        message: error.message
+      });
+
+      // Enhance error message with more details
+      if (error.response?.status === 500) {
+        throw new Error('Server error occurred while optimising profile statement. Please try again later.');
+      } else if (error.response?.data?.errors?.length > 0) {
+        throw new Error(error.response.data.errors[0]);
+      } else if (error.message) {
+        throw error;
+      }
+      throw new Error('Failed to optimise profile statement: Unknown error occurred');
     }
   },
 
@@ -131,19 +198,84 @@ export const cvParserService = {
       // Handle CV input - either as File or ID
       if (cv instanceof File) {
         formData.append('cv_file', cv);
-      } else {
+      } else if (typeof cv === 'string') {
         formData.append('cv_id', cv);
+      } else {
+        throw new Error('Invalid CV input: must be either a File or string ID');
       }
       
       if (jobDescription) {
         formData.append('jd', jobDescription);
       }
 
+      // Log the request payload for debugging
+      console.debug('Skills optimization request:', {
+        task: 'cs',
+        cvType: cv instanceof File ? 'file' : 'id',
+        hasJobDescription: !!jobDescription
+      });
+
       const response = await cvParserApi.post<BackendResponse>('', formData);
+      
+      // Log the full response for debugging
+      console.debug('Skills optimization response:', response.data);
+      
+      // Validate response structure
+      if (!response.data) {
+        throw new Error('Empty response received from server');
+      }
+
+      if (typeof response.data !== 'object') {
+        throw new Error('Invalid response format: expected an object');
+      }
+
+      if (response.data.status === 'error') {
+        if (response.data.errors?.length > 0) {
+          throw new Error(response.data.errors[0]);
+        }
+        throw new Error('Server returned an error status without details');
+      }
+
+      // Check if we have the expected data structure
+      if (!response.data.data) {
+        throw new Error('Invalid response format: missing data object in response');
+      }
+      
+      // If optimizedSkills is missing, try to extract it from the response
+      if (!response.data.data.optimizedSkills) {
+        console.warn('Response missing optimizedSkills field:', response.data);
+        
+        // Try to find the optimized skills in the response
+        if (response.data.data.skills) {
+          // If we have a skills field, use that
+          response.data.data.optimizedSkills = response.data.data.skills;
+        } else if (response.data.data.optimized) {
+          // If we have an optimized field, use that
+          response.data.data.optimizedSkills = response.data.data.optimized;
+        } else {
+          // If we can't find any suitable field, throw an error
+          throw new Error('Invalid response format: missing optimizedSkills in response data');
+        }
+      }
+
       return response.data;
-    } catch (error) {
-      console.error('Skills optimization error:', error);
-      throw error;
+    } catch (error: any) {
+      console.error('Skills optimization error:', {
+        error,
+        response: error.response?.data,
+        status: error.response?.status,
+        message: error.message
+      });
+
+      // Enhance error message with more details
+      if (error.response?.status === 500) {
+        throw new Error('Server error occurred while optimising skills. Please try again later.');
+      } else if (error.response?.data?.errors?.length > 0) {
+        throw new Error(error.response.data.errors[0]);
+      } else if (error.message) {
+        throw error;
+      }
+      throw new Error('Failed to optimise skills: Unknown error occurred');
     }
   },
 
@@ -161,19 +293,84 @@ export const cvParserService = {
       // Handle CV input - either as File or ID
       if (cv instanceof File) {
         formData.append('cv_file', cv);
-      } else {
+      } else if (typeof cv === 'string') {
         formData.append('cv_id', cv);
+      } else {
+        throw new Error('Invalid CV input: must be either a File or string ID');
       }
       
       if (jobDescription) {
         formData.append('jd', jobDescription);
       }
 
+      // Log the request payload for debugging
+      console.debug('Achievements optimization request:', {
+        task: 'ka',
+        cvType: cv instanceof File ? 'file' : 'id',
+        hasJobDescription: !!jobDescription
+      });
+
       const response = await cvParserApi.post<BackendResponse>('', formData);
+      
+      // Log the full response for debugging
+      console.debug('Achievements optimization response:', response.data);
+      
+      // Validate response structure
+      if (!response.data) {
+        throw new Error('Empty response received from server');
+      }
+
+      if (typeof response.data !== 'object') {
+        throw new Error('Invalid response format: expected an object');
+      }
+
+      if (response.data.status === 'error') {
+        if (response.data.errors?.length > 0) {
+          throw new Error(response.data.errors[0]);
+        }
+        throw new Error('Server returned an error status without details');
+      }
+
+      // Check if we have the expected data structure
+      if (!response.data.data) {
+        throw new Error('Invalid response format: missing data object in response');
+      }
+      
+      // If optimizedAchievements is missing, try to extract it from the response
+      if (!response.data.data.optimizedAchievements) {
+        console.warn('Response missing optimizedAchievements field:', response.data);
+        
+        // Try to find the optimized achievements in the response
+        if (response.data.data.achievements) {
+          // If we have an achievements field, use that
+          response.data.data.optimizedAchievements = response.data.data.achievements;
+        } else if (response.data.data.optimized) {
+          // If we have an optimized field, use that
+          response.data.data.optimizedAchievements = response.data.data.optimized;
+        } else {
+          // If we can't find any suitable field, throw an error
+          throw new Error('Invalid response format: missing optimizedAchievements in response data');
+        }
+      }
+
       return response.data;
-    } catch (error) {
-      console.error('Achievements optimization error:', error);
-      throw error;
+    } catch (error: any) {
+      console.error('Achievements optimization error:', {
+        error,
+        response: error.response?.data,
+        status: error.response?.status,
+        message: error.message
+      });
+
+      // Enhance error message with more details
+      if (error.response?.status === 500) {
+        throw new Error('Server error occurred while optimising achievements. Please try again later.');
+      } else if (error.response?.data?.errors?.length > 0) {
+        throw new Error(error.response.data.errors[0]);
+      } else if (error.message) {
+        throw error;
+      }
+      throw new Error('Failed to optimise achievements: Unknown error occurred');
     }
   },
 
@@ -192,8 +389,10 @@ export const cvParserService = {
       // Handle CV input - either as File or ID
       if (cv instanceof File) {
         formData.append('cv_file', cv);
-      } else {
+      } else if (typeof cv === 'string') {
         formData.append('cv_id', cv);
+      } else {
+        throw new Error('Invalid CV input: must be either a File or string ID');
       }
       
       formData.append('experience_index', experienceIndex.toString());
@@ -202,11 +401,75 @@ export const cvParserService = {
         formData.append('jd', jobDescription);
       }
 
+      // Log the request payload for debugging
+      console.debug('Experience optimization request:', {
+        task: 'role',
+        cvType: cv instanceof File ? 'file' : 'id',
+        experienceIndex,
+        hasJobDescription: !!jobDescription
+      });
+
       const response = await cvParserApi.post<BackendResponse>('', formData);
+      
+      // Log the full response for debugging
+      console.debug('Experience optimization response:', response.data);
+      
+      // Validate response structure
+      if (!response.data) {
+        throw new Error('Empty response received from server');
+      }
+
+      if (typeof response.data !== 'object') {
+        throw new Error('Invalid response format: expected an object');
+      }
+
+      if (response.data.status === 'error') {
+        if (response.data.errors?.length > 0) {
+          throw new Error(response.data.errors[0]);
+        }
+        throw new Error('Server returned an error status without details');
+      }
+
+      // Check if we have the expected data structure
+      if (!response.data.data) {
+        throw new Error('Invalid response format: missing data object in response');
+      }
+      
+      // If optimizedExperience is missing, try to extract it from the response
+      if (!response.data.data.optimizedExperience) {
+        console.warn('Response missing optimizedExperience field:', response.data);
+        
+        // Try to find the optimized experience in the response
+        if (response.data.data.experience) {
+          // If we have an experience field, use that
+          response.data.data.optimizedExperience = response.data.data.experience;
+        } else if (response.data.data.optimized) {
+          // If we have an optimized field, use that
+          response.data.data.optimizedExperience = response.data.data.optimized;
+        } else {
+          // If we can't find any suitable field, throw an error
+          throw new Error('Invalid response format: missing optimizedExperience in response data');
+        }
+      }
+
       return response.data;
-    } catch (error) {
-      console.error('Experience optimization error:', error);
-      throw error;
+    } catch (error: any) {
+      console.error('Experience optimization error:', {
+        error,
+        response: error.response?.data,
+        status: error.response?.status,
+        message: error.message
+      });
+
+      // Enhance error message with more details
+      if (error.response?.status === 500) {
+        throw new Error('Server error occurred while optimising experience. Please try again later.');
+      } else if (error.response?.data?.errors?.length > 0) {
+        throw new Error(error.response.data.errors[0]);
+      } else if (error.message) {
+        throw error;
+      }
+      throw new Error('Failed to optimise experience: Unknown error occurred');
     }
   },
 

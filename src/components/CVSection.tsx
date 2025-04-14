@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Eye, EyeOff, Edit, GripVertical } from 'lucide-react';
@@ -131,6 +130,7 @@ const CVSection: React.FC<CVSectionProps> = ({
               className="text-xs"
               onClick={onOptimize}
               disabled={isOptimizing}
+              data-testid="optimize-button"
             >
               {isOptimizing ? 'Optimizing...' : 'Optimize with AI'}
             </Button>

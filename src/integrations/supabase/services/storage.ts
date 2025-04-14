@@ -1,4 +1,4 @@
-import { supabase } from '../client'
+import { supabase } from '../supabaseClient'
 
 export class SupabaseError extends Error {
   constructor(public originalError: any, public context?: string) {

@@ -1,4 +1,4 @@
-import { supabase } from '../client'
+import { supabase } from '../supabaseClient'
 import type { Database } from '../types'
 
 type CV = Database['public']['Tables']['cvs']['Row']

@@ -78,7 +78,14 @@ const Preview = (): JSX.Element => {
   };
 
   const handleOptimizeProfileStatement = async () => {
-    if (!cv) return;
+    if (!cv) {
+      toast({
+        title: "Optimisation failed",
+        description: "No CV data available. Please upload a CV first.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     setIsOptimizingProfileStatement(true);
     
@@ -89,33 +96,56 @@ const Preview = (): JSX.Element => {
         throw new Error('No CV file or ID available');
       }
 
+      // Log the request parameters for debugging
+      console.debug('Optimizing profile statement with:', {
+        cvType: cvInput instanceof File ? 'file' : 'id',
+        hasJobDescription: !!cv.jobDescription
+      });
+
       const response = await optimizeProfileStatement(
         cvInput,
         cv.jobDescription // Pass job description if available
       );
       
+      console.debug('Profile statement optimization response:', response);
+      
       if (response.status === 'success') {
+        // Check if we have the optimized text
+        const optimizedText = response.data?.optimizedText;
+        
+        if (!optimizedText) {
+          console.error('Response missing optimizedText:', response);
+          throw new Error('Failed to optimise profile statement: Missing optimized text in response');
+        }
+        
         // Store both original and optimized content
         setOptimizedContent(prev => ({
           ...prev,
           profileStatement: {
             original: cv.profileStatement,
-            optimized: response.data.optimizedText,
-            feedback: formatFeedback(response.data.feedback)
+            optimized: optimizedText,
+            feedback: formatFeedback(response.data?.feedback)
           }
         }));
         
         toast({
-          title: "Profile statement optimized",
-          description: formatFeedback(response.data.feedback),
+          title: "Profile statement optimised",
+          description: formatFeedback(response.data?.feedback),
         });
       } else {
-        throw new Error(response.errors?.[0] || 'Failed to optimize profile statement');
+        throw new Error(response.errors?.[0] || 'Failed to optimise profile statement: Invalid response format');
       }
     } catch (error) {
+      console.error('Profile statement optimization error:', error);
+      
+      // Provide more specific error messages based on the error type
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : "An unexpected error occurred while optimising the profile statement";
+      
       toast({
-        title: "Optimization failed",
-        description: error instanceof Error ? error.message : "An unknown error occurred",
+        title: "Optimisation failed",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -124,7 +154,14 @@ const Preview = (): JSX.Element => {
   };
 
   const handleOptimizeSkills = async () => {
-    if (!cv) return;
+    if (!cv) {
+      toast({
+        title: "Optimisation failed",
+        description: "No CV data available. Please upload a CV first.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     setIsOptimizingSkills(true);
     
@@ -134,33 +171,56 @@ const Preview = (): JSX.Element => {
         throw new Error('No CV file or ID available');
       }
 
+      // Log the request parameters for debugging
+      console.debug('Optimizing skills with:', {
+        cvType: cvInput instanceof File ? 'file' : 'id',
+        hasJobDescription: !!cv.jobDescription
+      });
+
       const response = await optimizeSkills(
         cvInput,
         cv.jobDescription
       );
       
+      console.debug('Skills optimization response:', response);
+      
       if (response.status === 'success') {
+        // Check if we have the optimized skills
+        const optimizedSkills = response.data?.optimizedSkills;
+        
+        if (!optimizedSkills) {
+          console.error('Response missing optimizedSkills:', response);
+          throw new Error('Failed to optimise skills: Missing optimized skills in response');
+        }
+        
         // Store both original and optimized content
         setOptimizedContent(prev => ({
           ...prev,
           skills: {
             original: cv.skills,
-            optimized: response.data.optimizedSkills,
-            feedback: formatFeedback(response.data.feedback)
+            optimized: optimizedSkills,
+            feedback: formatFeedback(response.data?.feedback)
           }
         }));
         
         toast({
-          title: "Skills optimized",
-          description: formatFeedback(response.data.feedback),
+          title: "Skills optimised",
+          description: formatFeedback(response.data?.feedback),
         });
       } else {
-        throw new Error(response.errors?.[0] || 'Failed to optimize skills');
+        throw new Error(response.errors?.[0] || 'Failed to optimise skills: Invalid response format');
       }
     } catch (error) {
+      console.error('Skills optimization error:', error);
+      
+      // Provide more specific error messages based on the error type
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : "An unexpected error occurred while optimising the skills";
+      
       toast({
-        title: "Optimization failed",
-        description: error instanceof Error ? error.message : "An unknown error occurred",
+        title: "Optimisation failed",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -169,7 +229,14 @@ const Preview = (): JSX.Element => {
   };
 
   const handleOptimizeAchievements = async () => {
-    if (!cv) return;
+    if (!cv) {
+      toast({
+        title: "Optimisation failed",
+        description: "No CV data available. Please upload a CV first.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     setIsOptimizingAchievements(true);
     
@@ -179,33 +246,56 @@ const Preview = (): JSX.Element => {
         throw new Error('No CV file or ID available');
       }
 
+      // Log the request parameters for debugging
+      console.debug('Optimizing achievements with:', {
+        cvType: cvInput instanceof File ? 'file' : 'id',
+        hasJobDescription: !!cv.jobDescription
+      });
+
       const response = await optimizeAchievements(
         cvInput,
         cv.jobDescription
       );
       
+      console.debug('Achievements optimization response:', response);
+      
       if (response.status === 'success') {
+        // Check if we have the optimized achievements
+        const optimizedAchievements = response.data?.optimizedAchievements;
+        
+        if (!optimizedAchievements) {
+          console.error('Response missing optimizedAchievements:', response);
+          throw new Error('Failed to optimise achievements: Missing optimized achievements in response');
+        }
+        
         // Store both original and optimized content
         setOptimizedContent(prev => ({
           ...prev,
           achievements: {
             original: cv.achievements,
-            optimized: response.data.optimizedAchievements,
-            feedback: formatFeedback(response.data.feedback)
+            optimized: optimizedAchievements,
+            feedback: formatFeedback(response.data?.feedback)
           }
         }));
         
         toast({
-          title: "Achievements optimized",
-          description: formatFeedback(response.data.feedback),
+          title: "Achievements optimised",
+          description: formatFeedback(response.data?.feedback),
         });
       } else {
-        throw new Error(response.errors?.[0] || 'Failed to optimize achievements');
+        throw new Error(response.errors?.[0] || 'Failed to optimise achievements: Invalid response format');
       }
     } catch (error) {
+      console.error('Achievements optimization error:', error);
+      
+      // Provide more specific error messages based on the error type
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : "An unexpected error occurred while optimising the achievements";
+      
       toast({
-        title: "Optimization failed",
-        description: error instanceof Error ? error.message : "An unknown error occurred",
+        title: "Optimisation failed",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -213,48 +303,65 @@ const Preview = (): JSX.Element => {
     }
   };
 
-  const handleOptimizeExperience = async (index: number) => {
-    if (!cv) return;
-    
-    setOptimizingExperienceIndex(index);
-    
+  const handleOptimizeExperience = async (experienceIndex: number) => {
+    if (!cv) {
+      toast({
+        title: "Error",
+        description: "No CV data available. Please upload a CV first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setOptimizingExperienceIndex(experienceIndex);
+
     try {
-      const cvInput = cv.file || cv.id;
-      if (!cvInput) {
-        throw new Error('No CV file or ID available');
-      }
+      // Log the request parameters for debugging
+      console.debug('Experience optimization request:', {
+        cvType: cv.file ? 'file' : 'id',
+        experienceIndex,
+        hasJobDescription: !!cv.jobDescription
+      });
 
       const response = await optimizeExperience(
-        cvInput,
-        index,
+        cv.file || cv.id,
+        experienceIndex,
         cv.jobDescription
       );
-      
-      if (response.status === 'success') {
-        // Store both original and optimized content
-        setOptimizedContent(prev => ({
-          ...prev,
-          experience: {
-            ...prev.experience,
-            [index]: {
-              original: cv.experience[index],
-              optimized: response.data.optimizedExperience,
-              feedback: formatFeedback(response.data.feedback)
-            }
-          }
-        }));
-        
-        toast({
-          title: "Experience optimized",
-          description: formatFeedback(response.data.feedback),
-        });
-      } else {
-        throw new Error(response.errors?.[0] || 'Failed to optimize experience');
+
+      // Log the response for debugging
+      console.debug('Experience optimization response:', response);
+
+      if (response.status !== 'success') {
+        throw new Error(response.errors?.[0] || 'Failed to optimise experience');
       }
-    } catch (error) {
+
+      if (!response.data?.optimizedExperience) {
+        throw new Error('No optimised experience content received from server');
+      }
+
+      // Store both original and optimised content
+      setOptimizedContent(prev => ({
+        ...prev,
+        experience: {
+          ...prev.experience,
+          [experienceIndex]: {
+            original: cv.experience[experienceIndex]?.summary || '',
+            optimized: response.data.optimizedExperience,
+            feedback: response.data.feedback || ''
+          }
+        }
+      }));
+
       toast({
-        title: "Optimization failed",
-        description: error instanceof Error ? error.message : "An unknown error occurred",
+        title: "Success",
+        description: "Experience optimised successfully",
+      });
+    } catch (error: any) {
+      console.error('Experience optimization error:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to optimise experience",
         variant: "destructive",
       });
     } finally {

@@ -227,14 +227,19 @@ describe('QueryBuilder', () => {
   });
 
   describe('error handling', () => {
-    it.skip('should throw on error when configured', async () => {
+    it('should throw on error when configured', async () => {
       const error = { message: 'Test error', code: 'TEST_ERROR' };
       
-      // Mock the query chain with a simpler implementation
+      // Create a simpler mock that directly returns a promise
+      const mockQuery = {
+        data: null,
+        error,
+        then: jest.fn().mockImplementation((callback) => Promise.resolve(callback({ data: null, error })))
+      };
+
       mockSupabaseClient.from.mockReturnValue({
         select: jest.fn().mockReturnThis(),
-        throwOnError: jest.fn().mockReturnThis(),
-        then: jest.fn().mockImplementation(() => Promise.reject(error))
+        throwOnError: jest.fn().mockReturnValue(mockQuery)
       });
 
       await expect(
@@ -244,15 +249,20 @@ describe('QueryBuilder', () => {
           .throwOnError()
           .execute()
       ).rejects.toEqual(error);
-    }, 30000); // Increase timeout to 30 seconds
+    });
 
-    it.skip('should not throw on error when not configured', async () => {
+    it('should not throw on error when not configured', async () => {
       const error = { message: 'Test error', code: 'TEST_ERROR' };
       
-      // Mock the query chain with a simpler implementation
+      // Create a simpler mock that directly returns a promise
+      const mockQuery = {
+        data: null,
+        error,
+        then: jest.fn().mockImplementation((callback) => Promise.resolve(callback({ data: null, error })))
+      };
+
       mockSupabaseClient.from.mockReturnValue({
-        select: jest.fn().mockReturnThis(),
-        then: jest.fn().mockImplementation(() => Promise.resolve({ data: null, error }))
+        select: jest.fn().mockReturnValue(mockQuery)
       });
 
       const result = await queryBuilder
@@ -261,6 +271,6 @@ describe('QueryBuilder', () => {
         .execute();
 
       expect(result).toEqual({ data: null, error });
-    }, 30000); // Increase timeout to 30 seconds
+    });
   });
 }); 

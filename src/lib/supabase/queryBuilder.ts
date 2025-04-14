@@ -120,11 +120,12 @@ export class QueryBuilder<T extends Database> {
 
   async execute() {
     try {
-      const result = await Promise.resolve(this.query);
+      // Ensure we're properly awaiting the promise chain
+      const result = await this.query;
       
       // Handle both direct errors and errors in the result object
-      if (this.shouldThrow && (result.error || result instanceof Error)) {
-        throw result.error || result;
+      if (this.shouldThrow && result?.error) {
+        throw result.error;
       }
       
       return result;
