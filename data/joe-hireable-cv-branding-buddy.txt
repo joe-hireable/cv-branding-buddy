@@ -11935,8 +11935,10 @@ const Settings: React.FC = () => {
                         ))}
                       </div>
                       
+                      <br />
+
                       <Button 
-                        className="mt-6 bg-gradient-to-r from-hireable-secondary to-hireable-primary hover:opacity-90" 
+                        className="bg-gradient-to-r from-hireable-secondary to-hireable-primary hover:opacity-90" 
                         onClick={handleSave}
                         disabled={isSaving}
                       >
@@ -11988,8 +11990,10 @@ const Settings: React.FC = () => {
                         </div>
                       </div>
                       
+                      <br />
+                      
                       <Button 
-                        className="mt-6 bg-gradient-to-r from-hireable-secondary to-hireable-primary hover:opacity-90" 
+                        className="bg-gradient-to-r from-hireable-secondary to-hireable-primary hover:opacity-90" 
                         onClick={handleSave}
                         disabled={isSaving}
                       >

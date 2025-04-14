@@ -17,6 +17,7 @@ import { useDrag, useDrop } from 'react-dnd';
 import type { Identifier, XYCoord } from 'dnd-core';
 import { CustomButton } from '@/components/ui/custom-button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { cn } from '@/lib/utils';
 
 interface DragItem {
   index: number;
@@ -73,10 +74,6 @@ const SectionItem = ({ id, text, index, isVisible, moveSection, toggleVisibility
       // Get pixels to the top
       const hoverClientY = (clientOffset as XYCoord).y - hoverBoundingRect.top;
 
-      // Only perform the move when the mouse has crossed half of the items height
-      // When dragging downwards, only move when the cursor is below 50%
-      // When dragging upwards, only move when the cursor is above 50%
-
       // Dragging downwards
       if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
         return;
@@ -87,39 +84,39 @@ const SectionItem = ({ id, text, index, isVisible, moveSection, toggleVisibility
         return;
       }
 
-      // Time to actually perform the action
       moveSection(dragIndex, hoverIndex);
-
-      // Note: we're mutating the monitor item here!
-      // Generally it's better to avoid mutations,
-      // but it's good here for the sake of performance
-      // to avoid expensive index searches.
       item.index = hoverIndex;
     },
   });
 
   const [{ isDragging }, drag] = useDrag({
     type: 'section',
-    item: () => {
-      return { id, index };
-    },
+    item: () => ({
+      id,
+      index,
+      type: 'section'
+    }),
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
     canDrag: () => isDraggable,
   });
 
-  // Only apply drag and drop refs if the section is draggable
-  const dragDropRef = isDraggable ? (ref: HTMLDivElement | null) => {
-    drag(drop(ref));
-  } : ref;
+  // Use useEffect to ensure refs are properly applied
+  React.useEffect(() => {
+    if (isDraggable) {
+      drag(drop(ref.current));
+    }
+  }, [drag, drop, isDraggable]);
 
   return (
     <div
-      ref={dragDropRef}
-      className={`flex items-center justify-between p-3 border rounded-md bg-white dark:bg-gray-800 dark:border-gray-700 mb-2 ${
-        isDragging ? 'opacity-50 border-dashed border-2 border-gray-400 dark:border-gray-600 bg-gray-50 dark:bg-gray-900' : ''
-      }`}
+      ref={ref}
+      className={cn(
+        'flex items-center justify-between p-3 border rounded-md bg-white dark:bg-gray-800 dark:border-gray-700 mb-2',
+        isDragging && 'opacity-50 border-dashed border-2 border-gray-400 dark:border-gray-600 bg-gray-50 dark:bg-gray-900',
+        !isDraggable && 'cursor-default'
+      )}
       data-handler-id={handlerId}
     >
       <div className="flex items-center">
@@ -293,7 +290,7 @@ const Settings = () => {
               <div className="bg-white dark:bg-gray-800 rounded-md shadow-sm">
                 <div className="p-4 border-b dark:border-gray-700">
                   <CustomButton
-                    variant={activeTab === 'sections' ? 'primary' : 'secondary'}
+                    variant="plain"
                     className="w-full justify-start"
                     onClick={() => setActiveTab('sections')}
                   >
@@ -302,7 +299,7 @@ const Settings = () => {
                 </div>
                 <div className="p-4 border-b dark:border-gray-700">
                   <CustomButton
-                    variant={activeTab === 'anonymisation' ? 'primary' : 'secondary'}
+                    variant="plain"
                     className="w-full justify-start"
                     onClick={() => setActiveTab('anonymisation')}
                   >
@@ -311,7 +308,7 @@ const Settings = () => {
                 </div>
                 <div className="p-4 border-b dark:border-gray-700">
                   <CustomButton
-                    variant={activeTab === 'export' ? 'primary' : 'secondary'}
+                    variant="plain"
                     className="w-full justify-start"
                     onClick={() => setActiveTab('export')}
                   >
@@ -320,7 +317,7 @@ const Settings = () => {
                 </div>
                 <div className="p-4">
                   <CustomButton
-                    variant={activeTab === 'appearance' ? 'primary' : 'secondary'}
+                    variant="plain"
                     className="w-full justify-start"
                     onClick={() => setActiveTab('appearance')}
                   >
@@ -345,10 +342,10 @@ const Settings = () => {
                 <TabsContent value="sections" className="mt-0">
                   <Card>
                     <CardContent className="pt-6">
-                      <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-xl font-semibold">CV Section Arrangement</h2>
-                        <Button 
-                          variant="primary-gradient"
+                      <div className="flex justify-between items-center mb-4 space-x-4">
+                        <h2 className="text-xl font-semibold w-96 dark:text-white">CV Section Arrangement</h2>
+                        <CustomButton 
+                          variant="plain"
                           onClick={saveSectionOrder}
                           disabled={isSaving}
                         >
@@ -360,7 +357,7 @@ const Settings = () => {
                           ) : (
                             'Save Order'
                           )}
-                        </Button>
+                        </CustomButton>
                       </div>
                       
                       <div className="space-y-2">
@@ -377,10 +374,12 @@ const Settings = () => {
                           />
                         ))}
                       </div>
+
+                      <br />
                       
-                      <Button 
-                        variant="primary-gradient"
-                        className="mt-6" 
+                      <CustomButton 
+                        variant="primary"
+                        className="mt-0" 
                         onClick={handleSave}
                         disabled={isSaving}
                       >
@@ -392,7 +391,7 @@ const Settings = () => {
                         ) : (
                           'Save All Settings'
                         )}
-                      </Button>
+                      </CustomButton>
                     </CardContent>
                   </Card>
                 </TabsContent>
@@ -400,13 +399,13 @@ const Settings = () => {
                 <TabsContent value="anonymisation" className="mt-0">
                   <Card>
                     <CardContent className="pt-6">
-                      <h2 className="text-xl font-semibold mb-6">Default Anonymisation Settings</h2>
+                      <h2 className="text-xl font-semibold mb-6 dark:text-white">Default Anonymisation Settings</h2>
                       
                       <div className="space-y-4">
                         <div className="flex items-center justify-between">
                           <div className="space-y-0.5">
-                            <Label htmlFor="auto-anonymise">Auto-anonymise all CVs</Label>
-                            <p className="text-sm text-gray-500">
+                            <Label htmlFor="auto-anonymise" className="dark:text-white">Auto-anonymise all CVs</Label>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">
                               Automatically anonymise personal information in all uploaded CVs
                             </p>
                           </div>
@@ -419,8 +418,8 @@ const Settings = () => {
                         
                         <div className="flex items-center justify-between">
                           <div className="space-y-0.5">
-                            <Label htmlFor="keep-original">Keep original files</Label>
-                            <p className="text-sm text-gray-500">
+                            <Label htmlFor="keep-original" className="dark:text-white">Keep original files</Label>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">
                               Store original CV files alongside anonymised versions
                             </p>
                           </div>
@@ -432,9 +431,9 @@ const Settings = () => {
                         </div>
                       </div>
                       
-                      <Button 
-                        variant="primary-gradient"
-                        className="mt-6" 
+                      <br />
+                      <CustomButton 
+                        variant="primary"
                         onClick={handleSave}
                         disabled={isSaving}
                       >
@@ -446,7 +445,7 @@ const Settings = () => {
                         ) : (
                           'Save All Settings'
                         )}
-                      </Button>
+                      </CustomButton>
                     </CardContent>
                   </Card>
                 </TabsContent>
@@ -454,7 +453,7 @@ const Settings = () => {
                 <TabsContent value="export" className="mt-0">
                   <Card>
                     <CardContent className="pt-6">
-                      <h2 className="text-xl font-semibold mb-6">Default Export Format</h2>
+                      <h2 className="text-xl font-semibold mb-6 dark:text-white">Default Export Format</h2>
                       
                       <div className="flex items-center space-x-4">
                         <div className="flex items-center space-x-2">
@@ -463,7 +462,7 @@ const Settings = () => {
                             checked={settings.defaultExportFormat === 'PDF'}
                             onCheckedChange={() => handleExportFormatChange('PDF')}
                           />
-                          <Label htmlFor="pdf-format">PDF</Label>
+                          <Label htmlFor="pdf-format" className="dark:text-white">PDF</Label>
                         </div>
                         
                         <div className="flex items-center space-x-2">
@@ -472,17 +471,18 @@ const Settings = () => {
                             checked={settings.defaultExportFormat === 'DOCX'}
                             onCheckedChange={() => handleExportFormatChange('DOCX')}
                           />
-                          <Label htmlFor="docx-format">DOCX</Label>
+                          <Label htmlFor="docx-format" className="dark:text-white">DOCX</Label>
                         </div>
                       </div>
                       
-                      <p className="text-sm text-gray-500 mt-2">
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
                         Choose your preferred format for exporting CVs
                       </p>
                       
-                      <Button 
-                        variant="primary-gradient"
-                        className="mt-6" 
+                      <br />
+
+                      <CustomButton 
+                        variant="primary"
                         onClick={handleSave}
                         disabled={isSaving}
                       >
@@ -494,7 +494,7 @@ const Settings = () => {
                         ) : (
                           'Save All Settings'
                         )}
-                      </Button>
+                      </CustomButton>
                     </CardContent>
                   </Card>
                 </TabsContent>
@@ -540,9 +540,10 @@ const Settings = () => {
                         </RadioGroup>
                       </div>
                       
-                      <Button 
-                        variant="primary-gradient"
-                        className="mt-6" 
+                      <br />
+                      
+                      <CustomButton 
+                        variant="primary"
                         onClick={handleSave}
                         disabled={isSaving}
                       >
@@ -554,7 +555,7 @@ const Settings = () => {
                         ) : (
                           'Save All Settings'
                         )}
-                      </Button>
+                      </CustomButton>
                     </CardContent>
                   </Card>
                 </TabsContent>
