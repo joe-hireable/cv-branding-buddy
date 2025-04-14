@@ -148,18 +148,18 @@ const UploadPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
       <Header />
       
       <main className="flex-1 container mx-auto px-4 py-8">
         <div className="max-w-3xl mx-auto">
-          <h1 className="text-2xl font-bold text-gray-900 mb-1 text-center">Upload CV</h1>
-          <p className="text-gray-600 mb-8 text-center">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1 text-center">Upload CV</h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-8 text-center">
             Upload your CV and optionally include a job description to optimise your CV for specific roles
           </p>
           
           <div className="mb-8">
-            <h2 className="text-lg font-medium text-gray-800 mb-3">CV File</h2>
+            <h2 className="text-lg font-medium text-gray-800 dark:text-white mb-3">CV File</h2>
             <FileUpload 
               onFileSelected={handleCvUpload} 
               isLoading={isLoading} 
@@ -177,7 +177,7 @@ const UploadPage: React.FC = () => {
               />
               <label
                 htmlFor="matchToJD"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 dark:text-white"
               >
                 Match to Job Description?
               </label>
@@ -185,8 +185,8 @@ const UploadPage: React.FC = () => {
             
             {matchToJD && (
               <div>
-                <h2 className="text-lg font-medium text-gray-800 mb-3">Job Description (Optional)</h2>
-                <p className="text-sm text-gray-500 mb-3">
+                <h2 className="text-lg font-medium text-gray-800 dark:text-white mb-3">Job Description (Optional)</h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
                   Upload a job description to optimise your CV for specific roles
                 </p>
                 <FileUpload 
@@ -199,24 +199,25 @@ const UploadPage: React.FC = () => {
             )}
           </div>
           
-          <Button
-            type="submit"
-            className="w-full py-6 text-lg bg-hireable-gradient hover:opacity-90"
-            disabled={!cvFile || isLoading}
-            onClick={handleSubmit}
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                Uploading...
-              </>
-            ) : (
-              <>
-                <UploadIcon className="mr-2 h-5 w-5 text-white" />
-                Upload CV
-              </>
-            )}
-          </Button>
+          <div className="flex justify-center">
+            <Button 
+              onClick={handleSubmit}
+              disabled={isLoading || !cvFile}
+              className="w-full sm:w-auto"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <UploadIcon className="mr-2 h-4 w-4" />
+                  Process CV
+                </>
+              )}
+            </Button>
+          </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-10">
             <Card>
@@ -258,12 +259,18 @@ const UploadPage: React.FC = () => {
         </div>
       </main>
       
-      <footer className="border-t py-4">
-        <div className="container mx-auto px-4 text-sm text-gray-500 flex justify-between">
-          <p>© 2023 Hireable. All rights reserved.</p>
-          <div className="space-x-4">
-            <a href="#" className="hover:text-gray-700">Privacy Policy</a>
-            <a href="#" className="hover:text-gray-700">Terms of Service</a>
+      <footer className="border-t dark:border-gray-800 py-4 mt-8">
+        <div className="container mx-auto px-4 text-sm text-gray-500 dark:text-gray-400">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4">
+            <div className="text-center sm:text-left">
+              <p>© 2024 CV Branding Buddy. All rights reserved.</p>
+            </div>
+            <div className="text-center">
+              <a href="#" className="hover:text-gray-700 dark:hover:text-gray-300">Privacy Policy</a>
+            </div>
+            <div className="text-center sm:text-right">
+              <a href="#" className="hover:text-gray-700 dark:hover:text-gray-300">Terms of Service</a>
+            </div>
           </div>
         </div>
       </footer>

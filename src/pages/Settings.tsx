@@ -556,10 +556,18 @@ const Settings = () => {
       </main>
       
       <footer className="border-t dark:border-gray-800 py-4 mt-8">
-        <div className="container mx-auto px-4 text-sm text-gray-500 dark:text-gray-400 flex justify-between">
-          <span>© 2024 CV Branding Buddy. All rights reserved.</span>
-          <a href="#" className="hover:text-gray-700 dark:hover:text-gray-300">Privacy Policy</a>
-          <a href="#" className="hover:text-gray-700 dark:hover:text-gray-300">Terms of Service</a>
+        <div className="container mx-auto px-4 text-sm text-gray-500 dark:text-gray-400">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4">
+            <div className="text-center sm:text-left">
+              <p>© 2024 CV Branding Buddy. All rights reserved.</p>
+            </div>
+            <div className="text-center">
+              <a href="#" className="hover:text-gray-700 dark:hover:text-gray-300">Privacy Policy</a>
+            </div>
+            <div className="text-center sm:text-right">
+              <a href="#" className="hover:text-gray-700 dark:hover:text-gray-300">Terms of Service</a>
+            </div>
+          </div>
         </div>
       </footer>
     </div>

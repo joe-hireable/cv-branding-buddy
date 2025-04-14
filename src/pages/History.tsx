@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -130,13 +129,13 @@ const History: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
       <Header />
       
       <main className="flex-1 container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">History</h1>
-          <p className="text-gray-600 mb-6">View and manage your previously processed CVs</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">History</h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">View and manage your previously processed CVs</p>
           
           <div className="space-y-4">
             {items.map((item) => (
@@ -152,10 +151,10 @@ const History: React.FC = () => {
                     </div>
                     
                     <div className="flex-1 min-w-0">
-                      <h2 className="text-lg font-semibold text-gray-900 truncate">
+                      <h2 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
                         {item.anonymous ? '[Anonymous Candidate]' : item.candidateName}
                       </h2>
-                      <div className="flex flex-col sm:flex-row sm:items-center text-sm text-gray-500">
+                      <div className="flex flex-col sm:flex-row sm:items-center text-sm text-gray-500 dark:text-gray-400">
                         <p className="truncate">{item.position}</p>
                         <span className="hidden sm:inline mx-2">•</span>
                         <p className="truncate">{item.originalFilename}</p>
@@ -168,7 +167,7 @@ const History: React.FC = () => {
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        className="hidden sm:flex"
+                        className="hidden sm:flex dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
                         onClick={() => handleViewCV(item.id)}
                       >
                         <FileText className="h-4 w-4 mr-1" />
@@ -177,7 +176,7 @@ const History: React.FC = () => {
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        className="hidden sm:flex"
+                        className="hidden sm:flex dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
                         onClick={() => handleExportCV(item.id)}
                       >
                         <Download className="h-4 w-4 mr-1" />
@@ -186,33 +185,36 @@ const History: React.FC = () => {
                       
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
+                          <Button variant="ghost" size="icon" className="dark:text-gray-200 dark:hover:bg-gray-800">
                             <MoreVertical className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
+                        <DropdownMenuContent align="end" className="dark:bg-gray-800 dark:border-gray-700">
+                          <DropdownMenuLabel className="dark:text-white">Actions</DropdownMenuLabel>
+                          <DropdownMenuSeparator className="dark:border-gray-700" />
                           <DropdownMenuItem 
-                            className="sm:hidden"
+                            className="sm:hidden dark:text-gray-200 dark:hover:bg-gray-700"
                             onClick={() => handleViewCV(item.id)}
                           >
                             <FileText className="h-4 w-4 mr-2" />
                             View
                           </DropdownMenuItem>
                           <DropdownMenuItem 
-                            className="sm:hidden"
+                            className="sm:hidden dark:text-gray-200 dark:hover:bg-gray-700"
                             onClick={() => handleExportCV(item.id)}
                           >
                             <Download className="h-4 w-4 mr-2" />
                             Export
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleEditCV(item.id)}>
+                          <DropdownMenuItem 
+                            className="dark:text-gray-200 dark:hover:bg-gray-700"
+                            onClick={() => handleEditCV(item.id)}
+                          >
                             <Edit className="h-4 w-4 mr-2" />
                             Edit
                           </DropdownMenuItem>
                           <DropdownMenuItem 
-                            className="text-red-600"
+                            className="text-red-600 dark:text-red-400 dark:hover:bg-gray-700"
                             onClick={() => confirmDelete(item.id)}
                           >
                             <Trash2 className="h-4 w-4 mr-2" />
@@ -244,33 +246,41 @@ const History: React.FC = () => {
         </div>
       </main>
       
+      <footer className="border-t dark:border-gray-800 py-4 mt-8">
+        <div className="container mx-auto px-4 text-sm text-gray-500 dark:text-gray-400">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4">
+            <div className="text-center sm:text-left">
+              <p>© 2024 CV Branding Buddy. All rights reserved.</p>
+            </div>
+            <div className="text-center">
+              <a href="#" className="hover:text-gray-700 dark:hover:text-gray-300">Privacy Policy</a>
+            </div>
+            <div className="text-center sm:text-right">
+              <a href="#" className="hover:text-gray-700 dark:hover:text-gray-300">Terms of Service</a>
+            </div>
+          </div>
+        </div>
+      </footer>
+
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="dark:bg-gray-800 dark:border-gray-700">
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete this CV from your history.
-              This action cannot be undone.
+            <AlertDialogTitle className="dark:text-white">Delete CV</AlertDialogTitle>
+            <AlertDialogDescription className="dark:text-gray-400">
+              Are you sure you want to delete this CV? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteCV} className="bg-red-600 hover:bg-red-700">
+            <AlertDialogCancel className="dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-700">Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteCV}
+              className="bg-red-600 hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700"
+            >
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      
-      <footer className="border-t py-4 mt-8">
-        <div className="container mx-auto px-4 text-sm text-gray-500 flex justify-between">
-          <p>© 2023 Hireable. All rights reserved.</p>
-          <div className="space-x-4">
-            <a href="#" className="hover:text-gray-700">Privacy Policy</a>
-            <a href="#" className="hover:text-gray-700">Terms of Service</a>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 };

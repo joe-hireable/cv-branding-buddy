@@ -132,9 +132,8 @@ const FileUpload: React.FC<FileUploadProps> = ({
               Drag and drop your file here, or
             </p>
             <CustomButton 
-              variant="secondary" 
+              variant="primary" 
               size="sm" 
-              className="mt-2"
               disabled={isLoading}
               type="button"
             >
