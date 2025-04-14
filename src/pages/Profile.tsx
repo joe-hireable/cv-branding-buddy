@@ -48,9 +48,8 @@ const Profile: React.FC = () => {
     try {
       await updateRecruiterProfile(profile);
       toast({
-        title: "Success",
-        description: "Signed in successfully",
-        className: "dark:bg-gray-800 dark:border-gray-700",
+        title: "Profile updated",
+        description: "Your profile information has been saved successfully.",
       });
     } catch (error) {
       toast({
@@ -344,18 +343,12 @@ const Profile: React.FC = () => {
         </div>
       </main>
       
-      <footer className="border-t dark:border-gray-800 py-4 mt-8">
-        <div className="container mx-auto px-4 text-sm text-gray-500 dark:text-gray-400">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4">
-            <div className="text-center sm:text-left">
-              <p>© 2024 CV Branding Buddy. All rights reserved.</p>
-            </div>
-            <div className="text-center">
-              <a href="#" className="hover:text-gray-700 dark:hover:text-gray-300">Privacy Policy</a>
-            </div>
-            <div className="text-center sm:text-right">
-              <a href="#" className="hover:text-gray-700 dark:hover:text-gray-300">Terms of Service</a>
-            </div>
+      <footer className="border-t py-4 mt-8">
+        <div className="container mx-auto px-4 text-sm text-gray-500 flex justify-between">
+          <p>© 2023 Hireable. All rights reserved.</p>
+          <div className="space-x-4">
+            <a href="#" className="hover:text-gray-700">Privacy Policy</a>
+            <a href="#" className="hover:text-gray-700">Terms of Service</a>
           </div>
         </div>
       </footer>

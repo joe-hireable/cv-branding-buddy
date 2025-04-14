@@ -8,10 +8,12 @@ interface CustomButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   size?: 'default' | 'sm' | 'lg' | 'icon';
   children: React.ReactNode;
   className?: string;
+  fullWidth?: boolean;
 }
 
 export const CustomButton = React.forwardRef<HTMLButtonElement, CustomButtonProps>(
   ({ variant = 'primary', size = 'default', className, children, ...props }, ref) => {
+    
     if (variant === 'plain') {
       return (
         <div className="group relative w-full block rounded-md" style={{ padding: '1px' }}>
@@ -37,26 +39,28 @@ export const CustomButton = React.forwardRef<HTMLButtonElement, CustomButtonProp
     
     if (variant === 'primary') {
       return (
-        <div className="group relative w-full block rounded-md" style={{ padding: '1px' }}>
-          {/* Gradient background for border effect */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#F600FE] via-[#A136FF] to-[#0033D9] rounded-md"></div>
-          
-          <Button
-            ref={ref}
-            size={size}
-            className={cn(
-              'relative bg-gradient-to-r from-[#F600FE] via-[#A136FF] to-[#0033D9] hover:opacity-90 transition-all duration-200 w-full rounded-[4px] text-white',
-              className
-            )}
-            {...props}
-          >
-            {children}
-          </Button>
+        <div>
+          <div className="group relative w-full block rounded-md" style={{ padding: '1px' }}>
+            {/* Gradient background for border effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-[#F600FE] via-[#A136FF] to-[#0033D9] rounded-md"></div>
+            
+            <Button
+              ref={ref}
+              size={size}
+              className={cn(
+                'relative bg-gradient-to-r from-[#F600FE] via-[#A136FF] to-[#0033D9] hover:opacity-90 transition-all duration-200 w-full rounded-[4px] text-white',
+                className
+              )}
+              {...props}
+            >
+              {children}
+            </Button>
+          </div>
         </div>
       );
     }
     
-    // Secondary button with transparent background and gradient border/text
+    // Secondary button - uses the new secondary-gradient variant
     return (
       <div className="group relative w-full block rounded-md" style={{ padding: '1px' }}>
         {/* Gradient background for border effect */}
@@ -66,6 +70,7 @@ export const CustomButton = React.forwardRef<HTMLButtonElement, CustomButtonProp
           ref={ref}
           size={size}
           className={cn(
+            'relative bg-transparent border-none hover:opacity-90 transition-all duration-200 w-full rounded-[4px]',
             'relative bg-transparent border-none hover:opacity-90 transition-all duration-200 w-full rounded-[4px]',
             className
           )}

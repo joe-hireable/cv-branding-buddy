@@ -324,6 +324,16 @@ const Settings = () => {
                     Appearance
                   </CustomButton>
                 </div>
+                <div className="p-4 border-b dark:border-gray-700">
+                  <CustomButton
+                    variant={activeTab === 'buttons' ? 'primary' : 'secondary'}
+                    className="w-full justify-start"
+                    onClick={() => setActiveTab('buttons')}
+                    fullWidth
+                  >
+                    Button Styles
+                  </CustomButton>
+                </div>
               </div>
             </div>
             
@@ -546,6 +556,72 @@ const Settings = () => {
                           'Save All Settings'
                         )}
                       </CustomButton>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+                
+                <TabsContent value="buttons" className="mt-0">
+                  <Card>
+                    <CardContent className="pt-6">
+                      <h2 className="text-xl font-semibold mb-6 dark:text-white">Button Styles</h2>
+                      
+                      <div className="space-y-8">
+                        <div>
+                          <h3 className="text-lg font-medium dark:text-gray-200 mb-4">Regular Buttons</h3>
+                          <div className="flex flex-wrap gap-4">
+                            <Button variant="default">Default</Button>
+                            <Button variant="primary-gradient">Primary Gradient</Button>
+                            <Button variant="secondary-gradient">Secondary Gradient</Button>
+                            <Button variant="outline">Outline</Button>
+                            <Button variant="secondary">Secondary</Button>
+                            <Button variant="ghost">Ghost</Button>
+                            <Button variant="destructive">Destructive</Button>
+                            <Button variant="link">Link</Button>
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <h3 className="text-lg font-medium dark:text-gray-200 mb-4">Custom Buttons</h3>
+                          <div className="flex flex-wrap gap-4">
+                            <CustomButton variant="primary">Primary Button</CustomButton>
+                            <CustomButton variant="secondary">Secondary Button</CustomButton>
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <h3 className="text-lg font-medium dark:text-gray-200 mb-4">Button Sizes</h3>
+                          <div className="flex flex-wrap gap-4 items-center">
+                            <Button variant="primary-gradient" size="lg">Large</Button>
+                            <Button variant="primary-gradient">Default</Button>
+                            <Button variant="primary-gradient" size="sm">Small</Button>
+                            <Button variant="primary-gradient" size="icon">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>
+                            </Button>
+                          </div>
+                          <div className="flex flex-wrap gap-4 items-center mt-4">
+                            <Button variant="secondary-gradient" size="lg">Large</Button>
+                            <Button variant="secondary-gradient">Default</Button>
+                            <Button variant="secondary-gradient" size="sm">Small</Button>
+                            <Button variant="secondary-gradient" size="icon">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>
+                            </Button>
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <h3 className="text-lg font-medium dark:text-gray-200 mb-4">With Icons</h3>
+                          <div className="flex flex-wrap gap-4">
+                            <Button variant="primary-gradient">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+                              Download
+                            </Button>
+                            <Button variant="secondary-gradient">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                              Add New
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
                     </CardContent>
                   </Card>
                 </TabsContent>

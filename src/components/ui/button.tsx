@@ -18,6 +18,8 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
+        "primary-gradient": "bg-button-gradient text-white border-none hover:opacity-90 transition-all duration-200",
+        "secondary-gradient": "relative bg-transparent border-none hover:opacity-90 transition-all duration-200",
       },
       size: {
         default: "h-10 px-4 py-2",
@@ -42,6 +44,26 @@ export interface ButtonProps
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : "button"
+    
+    // Special handling for secondary-gradient variant
+    if (variant === "secondary-gradient") {
+      return (
+        <div className="group relative rounded-md" style={{ padding: '1px' }}>
+          {/* Gradient border */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#F600FE] via-[#A136FF] to-[#0033D9] rounded-md"></div>
+          <Comp
+            className={cn(buttonVariants({ variant, size, className }), "relative rounded-[4px] bg-background dark:bg-gray-900")}
+            ref={ref}
+            {...props}
+          >
+            <span className="bg-gradient-to-r from-[#F600FE] via-[#A136FF] to-[#0033D9] bg-clip-text text-transparent font-medium inline-flex items-center gap-2">
+              {props.children}
+            </span>
+          </Comp>
+        </div>
+      )
+    }
+    
     return (
       <Comp
         className={cn(buttonVariants({ variant, size, className }))}
