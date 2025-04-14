@@ -8,19 +8,20 @@ interface CustomButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   size?: 'default' | 'sm' | 'lg' | 'icon';
   children: React.ReactNode;
   className?: string;
+  fullWidth?: boolean;
 }
 
 export const CustomButton = React.forwardRef<HTMLButtonElement, CustomButtonProps>(
-  ({ variant = 'primary', size = 'default', className, children, ...props }, ref) => {
+  ({ variant = 'primary', size = 'default', className, children, fullWidth = false, ...props }, ref) => {
+    const widthClass = fullWidth ? 'w-full' : '';
+    
     if (variant === 'primary') {
       return (
         <Button
           ref={ref}
           size={size}
-          className={cn(
-            'bg-button-gradient text-white border-none hover:opacity-90 transition-all duration-200 w-full',
-            className
-          )}
+          variant="primary-gradient"
+          className={cn(widthClass, className)}
           {...props}
         >
           {children}
@@ -28,26 +29,17 @@ export const CustomButton = React.forwardRef<HTMLButtonElement, CustomButtonProp
       );
     }
     
-    // Secondary button with transparent background and gradient border/text
+    // Secondary button - uses the new secondary-gradient variant
     return (
-      <div className="group relative w-full block rounded-md" style={{ padding: '1px' }}>
-        {/* Gradient background for border effect */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#F600FE] via-[#A136FF] to-[#0033D9] rounded-md"></div>
-        
-        <Button
-          ref={ref}
-          size={size}
-          className={cn(
-            'relative bg-[#121424] border-none hover:opacity-90 transition-all duration-200 w-full rounded-[4px]',
-            className
-          )}
-          {...props}
-        >
-          <span className="bg-gradient-to-r from-[#F600FE] via-[#A136FF] to-[#0033D9] bg-clip-text text-transparent font-medium inline-flex items-center gap-2">
-            {children}
-          </span>
-        </Button>
-      </div>
+      <Button
+        ref={ref}
+        size={size}
+        variant="secondary-gradient"
+        className={cn(widthClass, className)}
+        {...props}
+      >
+        {children}
+      </Button>
     );
   }
 );

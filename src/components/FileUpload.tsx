@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { CustomButton } from '@/components/ui/custom-button';
+import { Button } from '@/components/ui/button';
 import { Upload, FileText } from 'lucide-react';
 import { GradientIcon } from '@/components/ui/gradient-icon';
 import { toast } from '@/components/ui/use-toast';
@@ -131,15 +131,15 @@ const FileUpload: React.FC<FileUploadProps> = ({
             <p className="text-sm font-medium text-gray-700">
               Drag and drop your file here, or
             </p>
-            <CustomButton 
-              variant="secondary" 
+            <Button 
+              variant="secondary-gradient" 
               size="sm" 
               className="mt-2"
               disabled={isLoading}
               type="button"
             >
               Browse Files
-            </CustomButton>
+            </Button>
             <p className="text-xs text-gray-500 mt-2">
               Supported formats: {accept} (Max size: {maxSize}MB)
             </p>

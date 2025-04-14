@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
@@ -86,11 +85,11 @@ const Profile: React.FC = () => {
 
   if (isLoading || !profile) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
         <Header />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <h2 className="text-xl font-medium text-gray-700">Loading profile...</h2>
+            <h2 className="text-xl font-medium text-gray-700 dark:text-gray-300">Loading profile...</h2>
           </div>
         </div>
       </div>
@@ -98,19 +97,19 @@ const Profile: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
       <Header />
       
       <main className="flex-1 container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Profile Settings</h1>
-          <p className="text-gray-600 mb-6">Manage your account and agency information</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Profile Settings</h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">Manage your account and agency information</p>
           
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {/* Sidebar */}
             <div className="md:col-span-1">
-              <div className="bg-white rounded-md shadow-sm">
-                <div className="p-4 border-b">
+              <div className="bg-white dark:bg-gray-800 rounded-md shadow-sm">
+                <div className="p-4 border-b dark:border-gray-700">
                   <Button
                     variant={activeTab === 'personal' ? 'default' : 'ghost'}
                     className={`w-full justify-start ${
@@ -121,7 +120,7 @@ const Profile: React.FC = () => {
                     Personal Information
                   </Button>
                 </div>
-                <div className="p-4 border-b">
+                <div className="p-4 border-b dark:border-gray-700">
                   <Button
                     variant={activeTab === 'agency' ? 'default' : 'ghost'}
                     className={`w-full justify-start ${
@@ -150,12 +149,12 @@ const Profile: React.FC = () => {
             <div className="md:col-span-3">
               <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <TabsContent value="personal" className="mt-0">
-                  <Card>
+                  <Card className="dark:bg-gray-800 dark:border-gray-700">
                     <CardContent className="pt-6">
-                      <h2 className="text-xl font-semibold mb-6">Personal Information</h2>
+                      <h2 className="text-xl font-semibold mb-6 dark:text-white">Personal Information</h2>
                       
                       <div className="flex flex-col items-start mb-6">
-                        <Label className="mb-2">Profile Picture</Label>
+                        <Label className="mb-2 dark:text-gray-300">Profile Picture</Label>
                         <div className="flex items-center gap-4">
                           <Avatar className="h-20 w-20">
                             <AvatarImage src={profile.profilePicture} />
@@ -167,7 +166,7 @@ const Profile: React.FC = () => {
                           <div>
                             <Button
                               variant="outline"
-                              className="mb-2"
+                              className="mb-2 dark:border-gray-600 dark:text-gray-300"
                               onClick={() => document.getElementById('profile-picture')?.click()}
                             >
                               Change Photo
@@ -179,54 +178,58 @@ const Profile: React.FC = () => {
                               className="hidden"
                               onChange={handleProfilePictureChange}
                             />
-                            <p className="text-xs text-gray-500">Recommended: Square image, at least 400x400px</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">Recommended: Square image, at least 400x400px</p>
                           </div>
                         </div>
                       </div>
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                         <div className="space-y-2">
-                          <Label htmlFor="first-name">First Name</Label>
+                          <Label htmlFor="first-name" className="dark:text-gray-300">First Name</Label>
                           <Input 
                             id="first-name" 
                             value={profile.firstName} 
                             onChange={(e) => updateProfileField('firstName', e.target.value)} 
+                            className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                           />
                         </div>
                         
                         <div className="space-y-2">
-                          <Label htmlFor="last-name">Last Name</Label>
+                          <Label htmlFor="last-name" className="dark:text-gray-300">Last Name</Label>
                           <Input 
                             id="last-name" 
                             value={profile.lastName} 
                             onChange={(e) => updateProfileField('lastName', e.target.value)} 
+                            className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                           />
                         </div>
                       </div>
                       
                       <div className="space-y-2 mb-6">
-                        <Label htmlFor="email">Email Address</Label>
+                        <Label htmlFor="email" className="dark:text-gray-300">Email Address</Label>
                         <Input 
                           id="email" 
                           type="email"
                           value={profile.email} 
                           onChange={(e) => updateProfileField('email', e.target.value)} 
+                          className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                         />
-                        <p className="text-xs text-gray-500">Changing email will require confirmation from your current email address</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Changing email will require confirmation from your current email address</p>
                       </div>
                       
                       <div className="space-y-2 mb-6">
-                        <Label htmlFor="phone">Phone Number</Label>
+                        <Label htmlFor="phone" className="dark:text-gray-300">Phone Number</Label>
                         <Input 
                           id="phone" 
                           value={profile.phone} 
                           onChange={(e) => updateProfileField('phone', e.target.value)} 
                           placeholder="+44 123 456 7890"
+                          className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                         />
                       </div>
                       
                       <Button 
-                        className="bg-hireable-gradient hover:opacity-90" 
+                        variant="primary-gradient"
                         onClick={handleSave} 
                         disabled={isSaving}
                       >
@@ -237,21 +240,22 @@ const Profile: React.FC = () => {
                 </TabsContent>
                 
                 <TabsContent value="agency" className="mt-0">
-                  <Card>
+                  <Card className="dark:bg-gray-800 dark:border-gray-700">
                     <CardContent className="pt-6">
-                      <h2 className="text-xl font-semibold mb-6">Agency Details</h2>
+                      <h2 className="text-xl font-semibold mb-6 dark:text-white">Agency Details</h2>
                       
                       <div className="space-y-2 mb-6">
-                        <Label htmlFor="agency-name">Agency Name</Label>
+                        <Label htmlFor="agency-name" className="dark:text-gray-300">Agency Name</Label>
                         <Input 
                           id="agency-name" 
                           value={profile.agencyName} 
                           onChange={(e) => updateProfileField('agencyName', e.target.value)} 
+                          className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                         />
                       </div>
                       
                       <div className="flex flex-col items-start mb-6">
-                        <Label className="mb-2">Agency Logo</Label>
+                        <Label className="mb-2 dark:text-gray-300">Agency Logo</Label>
                         <div className="flex items-center gap-4">
                           <div className="h-20 w-32 bg-gray-100 rounded-md flex items-center justify-center overflow-hidden border">
                             {profile.agencyLogo ? (
@@ -268,7 +272,7 @@ const Profile: React.FC = () => {
                           <div>
                             <Button
                               variant="outline"
-                              className="mb-2"
+                              className="mb-2 dark:border-gray-600 dark:text-gray-300"
                               onClick={() => document.getElementById('agency-logo')?.click()}
                             >
                               Upload Logo
@@ -280,23 +284,24 @@ const Profile: React.FC = () => {
                               className="hidden"
                               onChange={handleAgencyLogoChange}
                             />
-                            <p className="text-xs text-gray-500">Logo will appear on your branded CV exports</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">Logo will appear on your branded CV exports</p>
                           </div>
                         </div>
                       </div>
                       
                       <div className="space-y-2 mb-6">
-                        <Label htmlFor="website">Website</Label>
+                        <Label htmlFor="website" className="dark:text-gray-300">Website</Label>
                         <Input 
                           id="website" 
                           value={profile.website || ''} 
                           onChange={(e) => updateProfileField('website', e.target.value)} 
                           placeholder="https://your-agency.com"
+                          className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                         />
                       </div>
                       
                       <Button 
-                        className="bg-hireable-gradient hover:opacity-90" 
+                        variant="primary-gradient"
                         onClick={handleSave} 
                         disabled={isSaving}
                       >
@@ -307,26 +312,26 @@ const Profile: React.FC = () => {
                 </TabsContent>
                 
                 <TabsContent value="security" className="mt-0">
-                  <Card>
+                  <Card className="dark:bg-gray-800 dark:border-gray-700">
                     <CardContent className="pt-6">
-                      <h2 className="text-xl font-semibold mb-6">Security</h2>
+                      <h2 className="text-xl font-semibold mb-6 dark:text-white">Security</h2>
                       
                       <div className="space-y-2 mb-4">
-                        <Label htmlFor="current-password">Current Password</Label>
-                        <Input id="current-password" type="password" />
+                        <Label htmlFor="current-password" className="dark:text-gray-300">Current Password</Label>
+                        <Input id="current-password" type="password" className="dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
                       </div>
                       
                       <div className="space-y-2 mb-4">
-                        <Label htmlFor="new-password">New Password</Label>
-                        <Input id="new-password" type="password" />
+                        <Label htmlFor="new-password" className="dark:text-gray-300">New Password</Label>
+                        <Input id="new-password" type="password" className="dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
                       </div>
                       
                       <div className="space-y-2 mb-6">
-                        <Label htmlFor="confirm-password">Confirm New Password</Label>
-                        <Input id="confirm-password" type="password" />
+                        <Label htmlFor="confirm-password" className="dark:text-gray-300">Confirm New Password</Label>
+                        <Input id="confirm-password" type="password" className="dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
                       </div>
                       
-                      <Button className="bg-hireable-gradient hover:opacity-90">
+                      <Button variant="primary-gradient">
                         Update Password
                       </Button>
                     </CardContent>
@@ -338,12 +343,12 @@ const Profile: React.FC = () => {
         </div>
       </main>
       
-      <footer className="border-t py-4 mt-8">
-        <div className="container mx-auto px-4 text-sm text-gray-500 flex justify-between">
+      <footer className="border-t dark:border-gray-800 py-4 mt-8">
+        <div className="container mx-auto px-4 text-sm text-gray-500 dark:text-gray-400 flex justify-between">
           <p>© 2023 Hireable. All rights reserved.</p>
           <div className="space-x-4">
-            <a href="#" className="hover:text-gray-700">Privacy Policy</a>
-            <a href="#" className="hover:text-gray-700">Terms of Service</a>
+            <a href="#" className="hover:text-gray-700 dark:hover:text-gray-300">Privacy Policy</a>
+            <a href="#" className="hover:text-gray-700 dark:hover:text-gray-300">Terms of Service</a>
           </div>
         </div>
       </footer>
