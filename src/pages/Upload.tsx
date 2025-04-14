@@ -159,7 +159,7 @@ const UploadPage: React.FC = () => {
           </p>
           
           <div className="mb-8">
-            <h2 className="text-lg font-medium text-gray-800 mb-3">CV File</h2>
+            <h2 className="text-lg font-medium text-gray-800 mb-3 dark:text-white">CV File</h2>
             <FileUpload 
               onFileSelected={handleCvUpload} 
               isLoading={isLoading} 

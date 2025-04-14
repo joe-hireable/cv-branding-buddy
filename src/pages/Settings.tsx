@@ -324,16 +324,6 @@ const Settings = () => {
                     Appearance
                   </CustomButton>
                 </div>
-                <div className="p-4 border-b dark:border-gray-700">
-                  <CustomButton
-                    variant={activeTab === 'buttons' ? 'primary' : 'secondary'}
-                    className="w-full justify-start"
-                    onClick={() => setActiveTab('buttons')}
-                    fullWidth
-                  >
-                    Button Styles
-                  </CustomButton>
-                </div>
               </div>
             </div>
             

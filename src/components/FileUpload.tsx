@@ -128,7 +128,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
         ) : (
           <>
             <GradientIcon icon={Upload} size={20} className="mb-2" />
-            <p className="text-sm font-medium text-gray-700">
+            <p className="text-sm font-medium text-gray-700 dark:text-white">
               Drag and drop your file here, or
             </p>
             <CustomButton 
