@@ -25,6 +25,7 @@ import {
   optimizeExperience,
   generateDocument 
 } from '@/services/api';
+import { cvParserService } from '@/services/cvParserApi';
 import { toast } from '@/components/ui/use-toast';
 
 const Preview = (): JSX.Element => {
@@ -72,7 +73,13 @@ const Preview = (): JSX.Element => {
     if (!feedback) return 'Operation completed successfully';
     if (typeof feedback === 'string') return feedback;
     if (feedback.strengths && feedback.areas_to_improve) {
-      return `Strengths: ${feedback.strengths}\nAreas to improve: ${feedback.areas_to_improve}`;
+      const strengthsText = Array.isArray(feedback.strengths) 
+        ? feedback.strengths.join(', ') 
+        : feedback.strengths;
+      const areasToImproveText = Array.isArray(feedback.areas_to_improve) 
+        ? feedback.areas_to_improve.join(', ') 
+        : feedback.areas_to_improve;
+      return `Strengths: ${strengthsText}\nAreas to improve: ${areasToImproveText}`;
     }
     return 'Operation completed successfully';
   };
@@ -306,7 +313,7 @@ const Preview = (): JSX.Element => {
   const handleOptimizeExperience = async (experienceIndex: number) => {
     if (!cv) {
       toast({
-        title: "Error",
+        title: "Optimisation failed",
         description: "No CV data available. Please upload a CV first.",
         variant: "destructive",
       });
@@ -316,52 +323,35 @@ const Preview = (): JSX.Element => {
     setOptimizingExperienceIndex(experienceIndex);
 
     try {
-      // Log the request parameters for debugging
-      console.debug('Experience optimization request:', {
-        cvType: cv.file ? 'file' : 'id',
-        experienceIndex,
-        hasJobDescription: !!cv.jobDescription
-      });
-
-      const response = await optimizeExperience(
-        cv.file || cv.id,
-        experienceIndex,
-        cv.jobDescription
-      );
-
-      // Log the response for debugging
-      console.debug('Experience optimization response:', response);
-
-      if (response.status !== 'success') {
-        throw new Error(response.errors?.[0] || 'Failed to optimise experience');
-      }
-
-      if (!response.data?.optimizedExperience) {
-        throw new Error('No optimised experience content received from server');
-      }
-
-      // Store both original and optimised content
-      setOptimizedContent(prev => ({
-        ...prev,
-        experience: {
-          ...prev.experience,
-          [experienceIndex]: {
-            original: cv.experience[experienceIndex]?.summary || '',
-            optimized: response.data.optimizedExperience,
-            feedback: response.data.feedback || ''
+      const response = await cvParserService.optimizeExperience(cv.file || cv.id, experienceIndex);
+      
+      if (response.status === "success") {
+        setOptimizedContent((prev) => ({
+          ...prev,
+          experience: {
+            ...prev.experience,
+            [experienceIndex]: {
+              original: cv.experience[experienceIndex],
+              optimized: {
+                ...cv.experience[experienceIndex],
+                summary: response.data.optimizedExperience?.summary || response.data.data?.summary || '',
+                highlights: response.data.optimizedExperience?.highlights || response.data.data?.highlights || []
+              },
+              feedback: formatFeedback(response.data.feedback)
+            }
           }
-        }
-      }));
-
+        }));
+      } else {
+        toast({
+          title: "Optimisation failed",
+          description: response.errors?.[0] || "Failed to optimise experience",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
       toast({
-        title: "Success",
-        description: "Experience optimised successfully",
-      });
-    } catch (error: any) {
-      console.error('Experience optimization error:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to optimise experience",
+        title: "Optimisation failed",
+        description: "An error occurred while optimising the experience",
         variant: "destructive",
       });
     } finally {

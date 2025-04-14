@@ -401,26 +401,14 @@ export const cvParserService = {
         formData.append('jd', jobDescription);
       }
 
-      // Log the request payload for debugging
-      console.debug('Experience optimization request:', {
-        task: 'role',
-        cvType: cv instanceof File ? 'file' : 'id',
-        experienceIndex,
-        hasJobDescription: !!jobDescription
-      });
-
       const response = await cvParserApi.post<BackendResponse>('', formData);
       
-      // Log the full response for debugging
+      // Log the response for debugging
       console.debug('Experience optimization response:', response.data);
       
       // Validate response structure
       if (!response.data) {
         throw new Error('Empty response received from server');
-      }
-
-      if (typeof response.data !== 'object') {
-        throw new Error('Invalid response format: expected an object');
       }
 
       if (response.data.status === 'error') {
@@ -430,26 +418,27 @@ export const cvParserService = {
         throw new Error('Server returned an error status without details');
       }
 
-      // Check if we have the expected data structure
+      // Ensure we have a data object
       if (!response.data.data) {
-        throw new Error('Invalid response format: missing data object in response');
+        response.data.data = {};
       }
-      
-      // If optimizedExperience is missing, try to extract it from the response
+
+      // If optimizedExperience is missing, construct it from the response data
       if (!response.data.data.optimizedExperience) {
-        console.warn('Response missing optimizedExperience field:', response.data);
+        const data = response.data.data;
         
-        // Try to find the optimized experience in the response
-        if (response.data.data.experience) {
-          // If we have an experience field, use that
-          response.data.data.optimizedExperience = response.data.data.experience;
-        } else if (response.data.data.optimized) {
-          // If we have an optimized field, use that
-          response.data.data.optimizedExperience = response.data.data.optimized;
-        } else {
-          // If we can't find any suitable field, throw an error
-          throw new Error('Invalid response format: missing optimizedExperience in response data');
-        }
+        // Create an optimizedExperience object from the response data
+        response.data.data.optimizedExperience = {
+          highlights: Array.isArray(data.highlights) ? data.highlights :
+                     Array.isArray(data.bulletPoints) ? data.bulletPoints :
+                     Array.isArray(data.points) ? data.points : [],
+          summary: data.summary || data.description || data.text || '',
+          company: data.company || data.employer || data.organisation || '',
+          title: data.title || data.role || data.position || '',
+          start: data.start || data.startDate || '',
+          end: data.end || data.endDate || '',
+          current: data.current || data.isCurrent || false
+        };
       }
 
       return response.data;
@@ -461,7 +450,6 @@ export const cvParserService = {
         message: error.message
       });
 
-      // Enhance error message with more details
       if (error.response?.status === 500) {
         throw new Error('Server error occurred while optimising experience. Please try again later.');
       } else if (error.response?.data?.errors?.length > 0) {

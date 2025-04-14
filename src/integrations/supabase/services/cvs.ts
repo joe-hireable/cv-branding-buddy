@@ -1,5 +1,6 @@
 import { supabase } from '../supabaseClient'
 import type { Database } from '../types'
+import { useAuth } from '@/contexts/AuthContext'
 
 type CV = Database['public']['Tables']['cvs']['Row']
 type CVInsert = Database['public']['Tables']['cvs']['Insert']
@@ -8,6 +9,11 @@ type CVStatus = Database['public']['Enums']['cv_status']
 
 export const cvService = {
   async create(data: CVInsert) {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) {
+      throw new Error('Authentication required')
+    }
+
     const { data: cv, error } = await supabase
       .from('cvs')
       .insert(data)
@@ -19,6 +25,11 @@ export const cvService = {
   },
 
   async getById(id: string) {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) {
+      throw new Error('Authentication required')
+    }
+
     const { data: cv, error } = await supabase
       .from('cvs')
       .select(`
@@ -35,6 +46,11 @@ export const cvService = {
   },
 
   async listByCandidate(candidateId: string) {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) {
+      throw new Error('Authentication required')
+    }
+
     const { data: cvs, error } = await supabase
       .from('cvs')
       .select('*')
@@ -46,6 +62,11 @@ export const cvService = {
   },
 
   async updateStatus(id: string, status: CVStatus) {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) {
+      throw new Error('Authentication required')
+    }
+
     const { data: cv, error } = await supabase
       .from('cvs')
       .update({ status })
@@ -58,6 +79,11 @@ export const cvService = {
   },
 
   async update(id: string, data: CVUpdate) {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) {
+      throw new Error('Authentication required')
+    }
+
     const { data: cv, error } = await supabase
       .from('cvs')
       .update(data)
@@ -70,6 +96,11 @@ export const cvService = {
   },
 
   async delete(id: string) {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) {
+      throw new Error('Authentication required')
+    }
+
     const { error } = await supabase
       .from('cvs')
       .delete()
@@ -79,6 +110,11 @@ export const cvService = {
   },
 
   async subscribeToStatus(cvId: string, callback: (status: CVStatus) => void) {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) {
+      throw new Error('Authentication required')
+    }
+
     const subscription = supabase
       .channel(`cv_status_${cvId}`)
       .on(
@@ -99,6 +135,11 @@ export const cvService = {
   },
 
   async subscribeToAnalysisResults(cvId: string, callback: (payload: any) => void) {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) {
+      throw new Error('Authentication required')
+    }
+
     const subscription = supabase
       .channel(`cv_analysis_${cvId}`)
       .on(

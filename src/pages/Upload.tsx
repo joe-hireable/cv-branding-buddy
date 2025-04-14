@@ -3,14 +3,20 @@ import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import FileUpload from '@/components/FileUpload';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { UploadIcon, FileText, UserCheck } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { UploadIcon, FileText, UserCheck, Loader2 } from 'lucide-react';
 import { useCVContext } from '@/contexts/CVContext';
 import { useSettingsContext } from '@/contexts/SettingsContext';
-import { uploadCV } from '@/services/api';
 import { toast } from '@/components/ui/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { useAuth } from '@/contexts/AuthContext';
+import { cvService } from '@/services/cvService';
+import { cvParserService } from '@/services/cvParserApi';
+import { candidateService } from '@/integrations/supabase/services/candidates';
+import { storageService } from '@/integrations/supabase/services/storage';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 const UploadPage: React.FC = () => {
   const [cvFile, setCvFile] = useState<File | null>(null);
@@ -19,6 +25,7 @@ const UploadPage: React.FC = () => {
   const [matchToJD, setMatchToJD] = useState(false);
   const { setCv, setIsLoading: setCvIsLoading, setSectionVisibility, setSectionOrder, setIsAnonymized } = useCVContext();
   const { settings } = useSettingsContext();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   const handleCvUpload = (file: File) => {
@@ -32,8 +39,17 @@ const UploadPage: React.FC = () => {
   const handleSubmit = async () => {
     if (!cvFile) {
       toast({
-        title: "Please upload a CV",
-        description: "A CV file is required to proceed.",
+        title: "No file selected",
+        description: "Please select a CV file to upload",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "You must be logged in to upload a CV.",
         variant: "destructive",
       });
       return;
@@ -43,9 +59,24 @@ const UploadPage: React.FC = () => {
     setCvIsLoading(true);
 
     try {
-      // In a real app, we would upload the file to a server here
-      const response = await uploadCV(cvFile, matchToJD ? jdFile : null);
-      
+      // First, create a candidate record
+      const candidateData = {
+        owner_id: user.id,
+        first_name: null,
+        last_name: null,
+        current_position: null,
+        current_company: null,
+      };
+
+      const candidate = await candidateService.create(candidateData);
+
+      // Then parse the CV using the CV Parser service
+      const formData = new FormData();
+      formData.append('cv_file', cvFile);
+      formData.append('candidate_id', candidate.id);
+
+      const response = await cvParserService.parseCV(cvFile, jdFile || undefined);
+
       if (response.status === 'success') {
         // Apply default settings from SettingsContext
         if (settings) {
@@ -64,12 +95,24 @@ const UploadPage: React.FC = () => {
           // Apply anonymization setting
           setIsAnonymized(settings.defaultAnonymize || false);
         }
+
+        // Save the CV to Supabase with the candidate_id
+        const cvData = {
+          candidate_id: candidate.id,
+          uploader_id: user.id,
+          original_filename: cvFile.name,
+          original_file_storage_path: `cvs/${candidate.id}/${cvFile.name}`,
+          parsed_data: response.data,
+          status: "Parsed" as const
+        };
         
-        // Set the CV data with file and ID
+        const savedCV = await cvService.create(cvData);
+        
+        // Set the CV data with file, ID, and job description
         setCv({
           ...response.data,
+          id: savedCV.id,
           file: cvFile,
-          id: response.data.id || `temp-${Date.now()}`, // Use server-provided ID or generate temporary one
           jobDescription: jdFile ? await jdFile.text() : undefined
         });
         
@@ -81,11 +124,12 @@ const UploadPage: React.FC = () => {
               ? `Strengths: ${response.data.feedback.strengths}\nAreas to improve: ${response.data.feedback.areas_to_improve}`
               : 'CV processed successfully'
           : 'CV processed successfully';
-
+        
         toast({
           title: "CV uploaded successfully",
           description: feedbackMessage,
         });
+        
         navigate('/preview');
       } else {
         throw new Error(response.errors?.[0] || 'Failed to process CV');
