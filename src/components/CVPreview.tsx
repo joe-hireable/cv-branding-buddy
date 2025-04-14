@@ -4,14 +4,14 @@ import { Badge } from '@/components/ui/badge';
 
 interface CVPreviewProps {
   cv: CV;
-  isAnonymized: boolean;
+  isAnonymised: boolean;
   sectionVisibility: CVSectionVisibility;
   sectionOrder: string[];
 }
 
 const CVPreview: React.FC<CVPreviewProps> = ({ 
   cv, 
-  isAnonymized, 
+  isAnonymised, 
   sectionVisibility,
   sectionOrder 
 }) => {
@@ -32,10 +32,10 @@ const CVPreview: React.FC<CVPreviewProps> = ({
   };
   
   const renderContactInfo = () => {
-    if (isAnonymized) {
+    if (isAnonymised) {
       return (
-        <div className="text-gray-500 text-sm">
-          <p>[Anonymized Contact Information]</p>
+        <div className="text-center py-8">
+          <p>[Anonymised Contact Information]</p>
         </div>
       );
     }
@@ -80,7 +80,7 @@ const CVPreview: React.FC<CVPreviewProps> = ({
         return (
           <div key={sectionKey} className="mb-6">
             <h1 className="text-2xl font-bold text-gray-900">
-              {isAnonymized ? '[Anonymized Name]' : `${cv.firstName || ''} ${cv.surname || ''}`}
+              {isAnonymised ? '[Anonymised Name]' : `${cv.firstName || ''} ${cv.surname || ''}`}
             </h1>
             <h2 className="text-xl text-gray-700">{cv.headline}</h2>
             {renderContactInfo()}
@@ -122,7 +122,7 @@ const CVPreview: React.FC<CVPreviewProps> = ({
                 <div className="flex justify-between items-start">
                   <div>
                     <h4 className="font-medium text-gray-800">{exp.title}</h4>
-                    <p className="text-gray-600">{isAnonymized ? '[Confidential]' : exp.company}</p>
+                    <p className="text-gray-600">{isAnonymised ? '[Confidential]' : exp.company}</p>
                   </div>
                   <p className="text-sm text-gray-500">
                     {formatDate(exp.start)} - {exp.current ? 'Present' : formatDate(exp.end)}
@@ -159,16 +159,16 @@ const CVPreview: React.FC<CVPreviewProps> = ({
             <h3 className="text-lg font-semibold text-gray-800 mb-3">Education</h3>
             {cv.education.map((edu, index) => (
               <div key={index} className="mb-3">
-                <h4 className="font-medium text-gray-800">{isAnonymized ? '[Confidential]' : edu.institution}</h4>
-                {edu.location && !isAnonymized && (
+                <h4 className="font-medium text-gray-800">{isAnonymised ? '[Confidential]' : edu.institution}</h4>
+                {edu.location && !isAnonymised && (
                   <p className="text-gray-500 text-sm">
                     {[edu.location.city, edu.location.country]
                       .filter(Boolean)
                       .join(', ')}
                   </p>
                 )}
-                {isAnonymized && edu.location && (
-                  <p className="text-gray-500 text-sm">[Anonymized Location]</p>
+                {isAnonymised && edu.location && (
+                  <p className="text-gray-500 text-sm">[Anonymised Location]</p>
                 )}
                 {edu.qualifications && edu.qualifications.map((qual, idx) => (
                   <div key={idx} className="mt-1">
@@ -210,7 +210,7 @@ const CVPreview: React.FC<CVPreviewProps> = ({
               <div key={index} className="mb-2">
                 <p className="text-gray-700 font-medium">{cert.name}</p>
                 <p className="text-sm text-gray-500">
-                  {cert.issuer && isAnonymized ? '[Confidential]' : cert.issuer}
+                  {cert.issuer && isAnonymised ? '[Confidential]' : cert.issuer}
                   {cert.issuer && ` • `}
                   {cert.date && formatDate(cert.date)}
                 </p>
@@ -241,7 +241,7 @@ const CVPreview: React.FC<CVPreviewProps> = ({
             <h3 className="text-lg font-semibold text-gray-800 mb-3">Professional Memberships</h3>
             {cv.professionalMemberships.map((mem, index) => (
               <p key={index} className="text-gray-700 mb-1">
-                {mem.name}, {isAnonymized ? '[Confidential]' : mem.institution}
+                {mem.name}, {isAnonymised ? '[Confidential]' : mem.institution}
               </p>
             ))}
           </div>

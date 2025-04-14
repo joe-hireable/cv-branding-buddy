@@ -11,6 +11,7 @@ interface SettingsContextType {
   saveSettings: () => Promise<void>;
   isLoading: boolean;
   error: string | null;
+  setTheme: (theme: 'light' | 'dark' | 'system') => void;
 }
 
 const defaultSectionVisibility: CVSectionVisibility = {
@@ -29,7 +30,6 @@ const defaultSectionVisibility: CVSectionVisibility = {
 };
 
 const defaultSectionOrder = [
-  'personalInfo',
   'profileStatement',
   'skills',
   'experience',
@@ -46,9 +46,10 @@ const defaultSectionOrder = [
 const defaultSettings: AppSettings = {
   defaultSectionVisibility: defaultSectionVisibility,
   defaultSectionOrder: { sections: defaultSectionOrder },
-  defaultAnonymize: false,
+  defaultAnonymise: false,
   keepOriginalFiles: true,
   defaultExportFormat: 'PDF',
+  theme: 'light',
 };
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -102,6 +103,33 @@ function SettingsProvider({ children }: { children: ReactNode }) {
     initializeSettings();
   }, [isInitialized]);
 
+  // Apply theme when it changes
+  useEffect(() => {
+    if (!isInitialized) return;
+    
+    const applyTheme = () => {
+      const root = window.document.documentElement;
+      const isDark = settings.theme === 'dark' || 
+        (settings.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      
+      if (isDark) {
+        root.classList.add('dark');
+      } else {
+        root.classList.remove('dark');
+      }
+    };
+    
+    applyTheme();
+    
+    // Add listener for system preference changes if using system setting
+    if (settings.theme === 'system') {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      const handleChange = () => applyTheme();
+      mediaQuery.addEventListener('change', handleChange);
+      return () => mediaQuery.removeEventListener('change', handleChange);
+    }
+  }, [settings.theme, isInitialized]);
+
   const updateSettings = (newSettings: Partial<AppSettings>) => {
     console.log('[SettingsContext] Updating settings with:', newSettings);
     setSettings(prev => ({ ...prev, ...newSettings }));
@@ -153,6 +181,14 @@ function SettingsProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const setTheme = (theme: 'light' | 'dark' | 'system') => {
+    console.log(`[SettingsContext] Setting theme to ${theme}`);
+    setSettings(prev => ({
+      ...prev,
+      theme,
+    }));
+  };
+
   return (
     <SettingsContext.Provider
       value={{
@@ -162,7 +198,8 @@ function SettingsProvider({ children }: { children: ReactNode }) {
         setSectionOrder,
         saveSettings,
         isLoading,
-        error
+        error,
+        setTheme
       }}
     >
       {children}

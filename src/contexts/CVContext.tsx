@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { CV, CVSectionVisibility, CVSectionOrder } from '@/types/cv';
 
@@ -6,13 +5,13 @@ interface CVContextType {
   cv: CV | null;
   sectionVisibility: CVSectionVisibility;
   sectionOrder: CVSectionOrder;
-  isAnonymized: boolean;
+  isAnonymised: boolean;
   isLoading: boolean;
   setCv: (cv: CV | null) => void;
   updateCvField: (field: string, value: any) => void;
   setSectionVisibility: (section: keyof CVSectionVisibility, isVisible: boolean) => void;
   setSectionOrder: (order: string[]) => void;
-  setIsAnonymized: (value: boolean) => void;
+  setIsAnonymised: (value: boolean) => void;
   setIsLoading: (value: boolean) => void;
 }
 
@@ -33,7 +32,6 @@ const defaultSectionVisibility: CVSectionVisibility = {
 
 const defaultSectionOrder: CVSectionOrder = {
   sections: [
-    'personalInfo',
     'profileStatement',
     'skills',
     'experience',
@@ -62,7 +60,7 @@ export const CVProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [cv, setCv] = useState<CV | null>(null);
   const [sectionVisibility, setSectionVisibility] = useState<CVSectionVisibility>(defaultSectionVisibility);
   const [sectionOrder, setSectionOrder] = useState<CVSectionOrder>(defaultSectionOrder);
-  const [isAnonymized, setIsAnonymized] = useState<boolean>(false);
+  const [isAnonymised, setIsAnonymised] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const updateCvField = (field: string, value: any) => {
@@ -107,13 +105,13 @@ export const CVProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         cv,
         sectionVisibility,
         sectionOrder,
-        isAnonymized,
+        isAnonymised,
         isLoading,
         setCv,
         updateCvField,
         setSectionVisibility: handleSetSectionVisibility,
         setSectionOrder: handleSetSectionOrder,
-        setIsAnonymized,
+        setIsAnonymised,
         setIsLoading,
       }}
     >

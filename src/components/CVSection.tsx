@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Eye, EyeOff, Edit, GripVertical } from 'lucide-react';
-import { useDrag, useDrop } from 'react-dnd';
+import { useDrag, useDrop, useDragDropManager } from 'react-dnd';
+import { cn } from '@/lib/utils';
 
 interface CVSectionProps {
   id: string;
@@ -14,6 +15,7 @@ interface CVSectionProps {
   isOptimizing?: boolean;
   index: number;
   moveSection: (dragIndex: number, hoverIndex: number) => void;
+  isDraggable?: boolean;
 }
 
 interface DragItem {
@@ -33,20 +35,23 @@ const CVSection: React.FC<CVSectionProps> = ({
   isOptimizing = false,
   index,
   moveSection,
+  isDraggable = true,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const dragDropManager = useDragDropManager();
+  const isDraggingAny = dragDropManager.getMonitor().isDragging();
 
   const ref = React.useRef<HTMLDivElement>(null);
   
   const [{ handlerId }, drop] = useDrop({
-    accept: 'cv-section',
+    accept: 'section',
     collect(monitor) {
       return {
         handlerId: monitor.getHandlerId(),
       };
     },
     hover(item: DragItem, monitor) {
-      if (!ref.current) {
+      if (!ref.current || !isDraggable) {
         return;
       }
       const dragIndex = item.index;
@@ -96,34 +101,44 @@ const CVSection: React.FC<CVSectionProps> = ({
   });
 
   const [{ isDragging }, drag] = useDrag({
-    type: 'cv-section',
+    type: 'section',
     item: () => {
-      return { id, index };
+      return { id, index, type: 'section' };
     },
-    collect: (monitor: any) => ({
+    collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
+    canDrag: () => isDraggable,
   });
 
-  drag(drop(ref));
+  React.useEffect(() => {
+    if (isDraggable) {
+      drag(drop(ref.current));
+    }
+  }, [drag, drop, isDraggable]);
 
   return (
     <div
       ref={ref}
-      className={`mb-4 border rounded-md ${isVisible ? '' : 'opacity-50'} 
-        ${isDragging ? 'opacity-40' : ''}
-        transition-all duration-200`}
+      className={cn(
+        'mb-4 border rounded-md transition-all duration-200',
+        isVisible ? '' : 'opacity-50',
+        isDragging ? 'opacity-100 border-none bg-gradient-to-r from-[#F600FE] via-[#A136FF] to-[#0033D9] text-white shadow-lg' : '',
+        isDraggingAny ? 'cursor-grabbing' : ''
+      )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       data-handler-id={handlerId}
     >
-      <div className="flex items-center border-b px-4 py-3 bg-gray-50">
-        <div className="cursor-move px-1 mr-2">
-          <GripVertical className="h-5 w-5 text-gray-400" />
-        </div>
-        <h3 className="text-sm font-medium flex-1">{title}</h3>
+      <div className="flex items-center p-4">
+        {isDraggable && (
+          <div className={`px-1 mr-2 ${isDraggingAny ? 'cursor-grabbing' : 'cursor-grab'}`}>
+            <GripVertical className={cn("h-5 w-5", isDragging ? "text-white" : "text-gray-400")} />
+          </div>
+        )}
+        <h3 className={cn("text-sm font-medium flex-1", isDragging && "text-white")}>{title}</h3>
         <div className="flex space-x-2">
-          {onOptimize && (
+          {onOptimize && !isDraggingAny && !isDragging && (
             <Button
               variant="outline"
               size="sm"
@@ -135,7 +150,7 @@ const CVSection: React.FC<CVSectionProps> = ({
               {isOptimizing ? 'Optimizing...' : 'Optimize with AI'}
             </Button>
           )}
-          {onEdit && (
+          {onEdit && !isDraggingAny && !isDragging && (
             <Button
               variant="ghost"
               size="sm"
@@ -145,21 +160,23 @@ const CVSection: React.FC<CVSectionProps> = ({
               <Edit className="h-4 w-4" />
             </Button>
           )}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onVisibilityToggle}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            {isVisible ? (
-              <Eye className="h-4 w-4" />
-            ) : (
-              <EyeOff className="h-4 w-4" />
-            )}
-          </Button>
+          {!isDraggingAny && !isDragging && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onVisibilityToggle}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              {isVisible ? (
+                <Eye className="h-4 w-4" />
+              ) : (
+                <EyeOff className="h-4 w-4" />
+              )}
+            </Button>
+          )}
         </div>
       </div>
-      {isVisible && <div className="p-4">{children}</div>}
+      {isVisible && !isDraggingAny && !isDragging && <div className="p-4">{children}</div>}
     </div>
   );
 };

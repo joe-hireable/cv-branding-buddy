@@ -1,7 +1,7 @@
-
 import React, { useState, useRef } from 'react';
-import { Button } from '@/components/ui/button';
+import { CustomButton } from '@/components/ui/custom-button';
 import { Upload, FileText } from 'lucide-react';
+import { GradientIcon } from '@/components/ui/gradient-icon';
 import { toast } from '@/components/ui/use-toast';
 
 interface FileUploadProps {
@@ -119,7 +119,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
       <div className="flex flex-col items-center justify-center gap-2">
         {file ? (
           <>
-            <FileText className="h-12 w-12 text-hireable-primary mb-2" />
+            <GradientIcon icon={FileText} size={20} className="mb-2" />
             <p className="text-sm font-medium text-gray-700">{file.name}</p>
             <p className="text-xs text-gray-500">
               {(file.size / (1024 * 1024)).toFixed(2)} MB
@@ -127,21 +127,19 @@ const FileUpload: React.FC<FileUploadProps> = ({
           </>
         ) : (
           <>
-            <div className="bg-purple-100 rounded-full p-3 mb-2">
-              <Upload className="h-6 w-6 text-hireable-primary" />
-            </div>
+            <GradientIcon icon={Upload} size={20} className="mb-2" />
             <p className="text-sm font-medium text-gray-700">
               Drag and drop your file here, or
             </p>
-            <Button 
-              variant="outline" 
+            <CustomButton 
+              variant="secondary" 
               size="sm" 
-              className="mt-2 text-hireable-primary border-hireable-primary hover:bg-purple-50"
+              className="mt-2"
               disabled={isLoading}
               type="button"
             >
               Browse Files
-            </Button>
+            </CustomButton>
             <p className="text-xs text-gray-500 mt-2">
               Supported formats: {accept} (Max size: {maxSize}MB)
             </p>

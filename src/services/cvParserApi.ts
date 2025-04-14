@@ -87,7 +87,7 @@ export const cvParserService = {
   },
 
   /**
-   * Optimize personal statement/profile
+   * Optimise personal statement/profile
    */
   async optimizeProfileStatement(
     cv: File | string,
@@ -110,25 +110,11 @@ export const cvParserService = {
         formData.append('jd', jobDescription);
       }
 
-      // Log the request payload for debugging
-      console.debug('Profile statement optimization request:', {
-        task: 'ps',
-        cvType: cv instanceof File ? 'file' : 'id',
-        hasJobDescription: !!jobDescription
-      });
-
       const response = await cvParserApi.post<BackendResponse>('', formData);
-      
-      // Log the full response for debugging
-      console.debug('Profile statement optimization response:', response.data);
       
       // Validate response structure
       if (!response.data) {
         throw new Error('Empty response received from server');
-      }
-
-      if (typeof response.data !== 'object') {
-        throw new Error('Invalid response format: expected an object');
       }
 
       if (response.data.status === 'error') {
@@ -138,38 +124,27 @@ export const cvParserService = {
         throw new Error('Server returned an error status without details');
       }
 
-      // Check if we have the expected data structure
+      // Ensure we have a data object
       if (!response.data.data) {
-        throw new Error('Invalid response format: missing data object in response');
+        response.data.data = {};
       }
-      
-      // If optimizedText is missing, try to extract it from the response
+
+      // Handle the optimised text - it could be in different fields based on API response
+      if (!response.data.data.optimizedText && response.data.data.profileStatement) {
+        response.data.data.optimizedText = response.data.data.profileStatement;
+      }
+
+      // Validate we have the optimised text
       if (!response.data.data.optimizedText) {
-        console.warn('Response missing optimizedText field:', response.data);
-        
-        // Try to find the optimized text in the response
-        if (response.data.data.profileStatement) {
-          // If we have a profileStatement field, use that
-          response.data.data.optimizedText = response.data.data.profileStatement;
-        } else if (response.data.data.text) {
-          // If we have a text field, use that
-          response.data.data.optimizedText = response.data.data.text;
-        } else if (response.data.data.optimized) {
-          // If we have an optimized field, use that
-          response.data.data.optimizedText = response.data.data.optimized;
-        } else {
-          // If we can't find any suitable field, throw an error
-          throw new Error('Invalid response format: missing optimizedText in response data');
-        }
+        throw new Error('Invalid response format: missing optimised text in response');
       }
 
       return response.data;
     } catch (error: any) {
-      console.error('Profile statement optimization error:', {
+      console.error('Profile statement optimisation error:', {
         error,
-        response: error.response?.data,
-        status: error.response?.status,
-        message: error.message
+        message: error.message,
+        response: error.response?.data
       });
 
       // Enhance error message with more details
@@ -185,7 +160,7 @@ export const cvParserService = {
   },
 
   /**
-   * Optimize core skills section
+   * Optimise core skills section
    */
   async optimizeSkills(
     cv: File | string,
@@ -209,7 +184,7 @@ export const cvParserService = {
       }
 
       // Log the request payload for debugging
-      console.debug('Skills optimization request:', {
+      console.debug('Skills optimisation request:', {
         task: 'cs',
         cvType: cv instanceof File ? 'file' : 'id',
         hasJobDescription: !!jobDescription
@@ -218,7 +193,7 @@ export const cvParserService = {
       const response = await cvParserApi.post<BackendResponse>('', formData);
       
       // Log the full response for debugging
-      console.debug('Skills optimization response:', response.data);
+      console.debug('Skills optimisation response:', response.data);
       
       // Validate response structure
       if (!response.data) {
@@ -241,26 +216,24 @@ export const cvParserService = {
         throw new Error('Invalid response format: missing data object in response');
       }
       
-      // If optimizedSkills is missing, try to extract it from the response
+      // If optimisedSkills is missing, try to extract it from the response
       if (!response.data.data.optimizedSkills) {
-        console.warn('Response missing optimizedSkills field:', response.data);
+        console.warn('Response missing optimisedSkills field:', response.data);
         
-        // Try to find the optimized skills in the response
+        // Try to find the optimised skills in the response
         if (response.data.data.skills) {
-          // If we have a skills field, use that
           response.data.data.optimizedSkills = response.data.data.skills;
         } else if (response.data.data.optimized) {
-          // If we have an optimized field, use that
+          // If we have an optimised field, use that
           response.data.data.optimizedSkills = response.data.data.optimized;
         } else {
-          // If we can't find any suitable field, throw an error
-          throw new Error('Invalid response format: missing optimizedSkills in response data');
+          throw new Error('Invalid response format: missing optimisedSkills in response data');
         }
       }
 
       return response.data;
     } catch (error: any) {
-      console.error('Skills optimization error:', {
+      console.error('Skills optimisation error:', {
         error,
         response: error.response?.data,
         status: error.response?.status,
@@ -280,7 +253,7 @@ export const cvParserService = {
   },
 
   /**
-   * Optimize key achievements
+   * Optimise key achievements
    */
   async optimizeAchievements(
     cv: File | string,
@@ -303,25 +276,14 @@ export const cvParserService = {
         formData.append('jd', jobDescription);
       }
 
-      // Log the request payload for debugging
-      console.debug('Achievements optimization request:', {
-        task: 'ka',
-        cvType: cv instanceof File ? 'file' : 'id',
-        hasJobDescription: !!jobDescription
-      });
-
       const response = await cvParserApi.post<BackendResponse>('', formData);
       
-      // Log the full response for debugging
-      console.debug('Achievements optimization response:', response.data);
+      // Log the response for debugging
+      console.debug('Achievements optimisation response:', response.data);
       
       // Validate response structure
       if (!response.data) {
         throw new Error('Empty response received from server');
-      }
-
-      if (typeof response.data !== 'object') {
-        throw new Error('Invalid response format: expected an object');
       }
 
       if (response.data.status === 'error') {
@@ -331,38 +293,41 @@ export const cvParserService = {
         throw new Error('Server returned an error status without details');
       }
 
-      // Check if we have the expected data structure
+      // Ensure we have a data object
       if (!response.data.data) {
-        throw new Error('Invalid response format: missing data object in response');
+        response.data.data = {};
       }
-      
-      // If optimizedAchievements is missing, try to extract it from the response
+
+      // If optimisedAchievements is missing, use the achievements array from the response
       if (!response.data.data.optimizedAchievements) {
-        console.warn('Response missing optimizedAchievements field:', response.data);
-        
-        // Try to find the optimized achievements in the response
         if (response.data.data.achievements) {
-          // If we have an achievements field, use that
           response.data.data.optimizedAchievements = response.data.data.achievements;
-        } else if (response.data.data.optimized) {
-          // If we have an optimized field, use that
-          response.data.data.optimizedAchievements = response.data.data.optimized;
+        } else if (response.data.data.keyAchievements) {
+          response.data.data.optimizedAchievements = response.data.data.keyAchievements;
+        } else if (response.data.data.accomplishments) {
+          response.data.data.optimizedAchievements = response.data.data.accomplishments;
+        } else if (response.data.data.highlights) {
+          response.data.data.optimizedAchievements = response.data.data.highlights;
         } else {
-          // If we can't find any suitable field, throw an error
-          throw new Error('Invalid response format: missing optimizedAchievements in response data');
+          // If no achievements array is found, initialise an empty array
+          response.data.data.optimizedAchievements = [];
         }
       }
 
+      // Ensure each achievement is a string
+      response.data.data.optimizedAchievements = response.data.data.optimizedAchievements.map(
+        (achievement: any) => typeof achievement === 'string' ? achievement : achievement.text || achievement.description || achievement.toString()
+      );
+
       return response.data;
     } catch (error: any) {
-      console.error('Achievements optimization error:', {
+      console.error('Achievements optimisation error:', {
         error,
         response: error.response?.data,
         status: error.response?.status,
         message: error.message
       });
 
-      // Enhance error message with more details
       if (error.response?.status === 500) {
         throw new Error('Server error occurred while optimising achievements. Please try again later.');
       } else if (error.response?.data?.errors?.length > 0) {
@@ -375,7 +340,7 @@ export const cvParserService = {
   },
 
   /**
-   * Optimize role descriptions
+   * Optimise role descriptions
    */
   async optimizeExperience(
     cv: File | string,
@@ -404,7 +369,7 @@ export const cvParserService = {
       const response = await cvParserApi.post<BackendResponse>('', formData);
       
       // Log the response for debugging
-      console.debug('Experience optimization response:', response.data);
+      console.debug('Experience optimisation response:', response.data);
       
       // Validate response structure
       if (!response.data) {
@@ -423,12 +388,12 @@ export const cvParserService = {
         response.data.data = {};
       }
 
-      // If optimizedExperience is missing, construct it from the response data
-      if (!response.data.data.optimizedExperience) {
+      // If optimisedExperience is missing, construct it from the response data
+      if (!response.data.data.optimisedExperience) {
         const data = response.data.data;
         
-        // Create an optimizedExperience object from the response data
-        response.data.data.optimizedExperience = {
+        // Create an optimisedExperience object from the response data
+        response.data.data.optimisedExperience = {
           highlights: Array.isArray(data.highlights) ? data.highlights :
                      Array.isArray(data.bulletPoints) ? data.bulletPoints :
                      Array.isArray(data.points) ? data.points : [],
@@ -443,7 +408,7 @@ export const cvParserService = {
 
       return response.data;
     } catch (error: any) {
-      console.error('Experience optimization error:', {
+      console.error('Experience optimisation error:', {
         error,
         response: error.response?.data,
         status: error.response?.status,

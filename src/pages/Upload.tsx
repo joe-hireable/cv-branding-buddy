@@ -5,6 +5,7 @@ import FileUpload from '@/components/FileUpload';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { UploadIcon, FileText, UserCheck, Loader2 } from 'lucide-react';
+import { GradientIcon } from '@/components/ui/gradient-icon';
 import { useCVContext } from '@/contexts/CVContext';
 import { useSettingsContext } from '@/contexts/SettingsContext';
 import { toast } from '@/components/ui/use-toast';
@@ -23,7 +24,7 @@ const UploadPage: React.FC = () => {
   const [jdFile, setJdFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [matchToJD, setMatchToJD] = useState(false);
-  const { setCv, setIsLoading: setCvIsLoading, setSectionVisibility, setSectionOrder, setIsAnonymized } = useCVContext();
+  const { setCv, setIsLoading: setCvIsLoading, setSectionVisibility, setSectionOrder, setIsAnonymised } = useCVContext();
   const { settings } = useSettingsContext();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -92,8 +93,8 @@ const UploadPage: React.FC = () => {
             setSectionOrder(settings.defaultSectionOrder.sections);
           }
           
-          // Apply anonymization setting
-          setIsAnonymized(settings.defaultAnonymize || false);
+          // Apply anonymisation setting
+          setIsAnonymised(settings.defaultAnonymise || false);
         }
 
         // Save the CV to Supabase with the candidate_id
@@ -152,13 +153,13 @@ const UploadPage: React.FC = () => {
       
       <main className="flex-1 container mx-auto px-4 py-8">
         <div className="max-w-3xl mx-auto">
-          <h1 className="text-2xl font-bold text-gray-900 mb-1 text-center">Upload CV/Resume</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-1 text-center">Upload CV</h1>
           <p className="text-gray-600 mb-8 text-center">
-            Upload your CV file and we'll automatically process, anonymize, and format it for you.
+            Upload your CV and optionally include a job description to optimise your CV for specific roles
           </p>
           
           <div className="mb-8">
-            <h2 className="text-lg font-medium text-gray-800 mb-3">CV/Resume File</h2>
+            <h2 className="text-lg font-medium text-gray-800 mb-3">CV File</h2>
             <FileUpload 
               onFileSelected={handleCvUpload} 
               isLoading={isLoading} 
@@ -184,9 +185,9 @@ const UploadPage: React.FC = () => {
             
             {matchToJD && (
               <div>
-                <h2 className="text-lg font-medium text-gray-800 mb-3">Job Description</h2>
+                <h2 className="text-lg font-medium text-gray-800 mb-3">Job Description (Optional)</h2>
                 <p className="text-sm text-gray-500 mb-3">
-                  Adding a job description allows our AI to optimize the CV specifically for this role.
+                  Upload a job description to optimise your CV for specific roles
                 </p>
                 <FileUpload 
                   onFileSelected={handleJdUpload} 
@@ -198,24 +199,33 @@ const UploadPage: React.FC = () => {
             )}
           </div>
           
-          <Button 
-            onClick={handleSubmit} 
-            disabled={!cvFile || isLoading}
+          <Button
+            type="submit"
             className="w-full py-6 text-lg bg-hireable-gradient hover:opacity-90"
+            disabled={!cvFile || isLoading}
+            onClick={handleSubmit}
           >
-            <UploadIcon className="mr-2 h-5 w-5" /> Upload & Process
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                Uploading...
+              </>
+            ) : (
+              <>
+                <UploadIcon className="mr-2 h-5 w-5 text-white" />
+                Upload CV
+              </>
+            )}
           </Button>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-10">
             <Card>
               <CardContent className="pt-6">
                 <div className="flex flex-col items-center text-center">
-                  <div className="bg-purple-100 p-3 rounded-full mb-3">
-                    <UserCheck className="h-6 w-6 text-hireable-primary" />
-                  </div>
-                  <h3 className="font-medium mb-2">Auto Anonymization</h3>
+                  <GradientIcon icon={UserCheck} size={24} />
+                  <h3 className="font-medium mb-2 mt-3">Auto Anonymisation</h3>
                   <p className="text-sm text-gray-500">
-                    Automatically removes personal information for unbiased recruitment
+                    Automatically anonymises personal information for unbiased recruitment
                   </p>
                 </div>
               </CardContent>
@@ -224,10 +234,8 @@ const UploadPage: React.FC = () => {
             <Card>
               <CardContent className="pt-6">
                 <div className="flex flex-col items-center text-center">
-                  <div className="bg-purple-100 p-3 rounded-full mb-3">
-                    <FileText className="h-6 w-6 text-hireable-primary" />
-                  </div>
-                  <h3 className="font-medium mb-2">Smart Formatting</h3>
+                  <GradientIcon icon={FileText} size={24} />
+                  <h3 className="font-medium mb-2 mt-3">Smart Formatting</h3>
                   <p className="text-sm text-gray-500">
                     Consistently formats CVs to your agency's template
                   </p>
@@ -238,10 +246,8 @@ const UploadPage: React.FC = () => {
             <Card>
               <CardContent className="pt-6">
                 <div className="flex flex-col items-center text-center">
-                  <div className="bg-purple-100 p-3 rounded-full mb-3">
-                    <UploadIcon className="h-6 w-6 text-hireable-primary" />
-                  </div>
-                  <h3 className="font-medium mb-2">Instant Processing</h3>
+                  <GradientIcon icon={UploadIcon} size={24} />
+                  <h3 className="font-medium mb-2 mt-3">Instant Processing</h3>
                   <p className="text-sm text-gray-500">
                     Process multiple CVs in seconds, not hours
                   </p>

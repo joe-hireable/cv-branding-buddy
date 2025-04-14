@@ -72,11 +72,11 @@ describe('Preview Component', () => {
       cv: mockCv,
       sectionVisibility: { profileStatement: true },
       sectionOrder: { sections: ['profileStatement'] },
-      isAnonymized: false,
+      isAnonymised: false,
       updateCvField: jest.fn(),
       setSectionVisibility: jest.fn(),
       setSectionOrder: jest.fn(),
-      setIsAnonymized: jest.fn()
+      setIsAnonymised: jest.fn()
     });
     
     (useRecruiterContext as jest.Mock).mockReturnValue({
@@ -131,7 +131,8 @@ describe('Preview Component', () => {
       // Check that the toast was called with success message
       expect(toast).toHaveBeenCalledWith({
         title: 'Profile statement optimised',
-        description: 'Great improvements made'
+        description: 'Your profile statement has been optimised successfully',
+        variant: 'default',
       });
     });
     
@@ -163,7 +164,7 @@ describe('Preview Component', () => {
       expect(toast).toHaveBeenCalledWith({
         title: 'Optimisation failed',
         description: 'Failed to optimise profile statement',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     });
     
@@ -173,11 +174,11 @@ describe('Preview Component', () => {
         cv: null,
         sectionVisibility: { profileStatement: true },
         sectionOrder: { sections: ['profileStatement'] },
-        isAnonymized: false,
+        isAnonymised: false,
         updateCvField: jest.fn(),
         setSectionVisibility: jest.fn(),
         setSectionOrder: jest.fn(),
-        setIsAnonymized: jest.fn()
+        setIsAnonymised: jest.fn()
       });
       
       render(
@@ -191,7 +192,7 @@ describe('Preview Component', () => {
       
       // Verify that we show the "No CV data" message
       expect(screen.getByText('No CV data available')).toBeInTheDocument();
-      expect(screen.getByText('Please upload a CV to preview and optimize it.')).toBeInTheDocument();
+      expect(screen.getByText('Please upload a CV to preview and optimise it.')).toBeInTheDocument();
     });
     
     it('should handle missing CV file and ID', async () => {
@@ -200,11 +201,11 @@ describe('Preview Component', () => {
         cv: { ...mockCv, id: undefined, file: undefined },
         sectionVisibility: { profileStatement: true },
         sectionOrder: { sections: ['profileStatement'] },
-        isAnonymized: false,
+        isAnonymised: false,
         updateCvField: jest.fn(),
         setSectionVisibility: jest.fn(),
         setSectionOrder: jest.fn(),
-        setIsAnonymized: jest.fn()
+        setIsAnonymised: jest.fn()
       });
       
       render(

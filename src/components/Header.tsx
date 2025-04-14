@@ -12,11 +12,23 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useRecruiterContext } from '@/contexts/RecruiterContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSettingsContext } from '@/contexts/SettingsContext';
+import ThemeToggle from '@/components/ThemeToggle';
 
-const Header: React.FC = () => {
+const Header = () => {
   const location = useLocation();
   const { profile } = useRecruiterContext();
   const { user, signOut } = useAuth();
+  const { settings } = useSettingsContext();
+  
+  // Determine if dark mode is active
+  const isDarkMode = () => {
+    if (typeof window === 'undefined') return false;
+    
+    if (settings.theme === 'dark') return true;
+    if (settings.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches) return true;
+    return false;
+  };
 
   const getInitials = () => {
     if (!profile) return 'U';
@@ -33,12 +45,12 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="bg-white border-b border-gray-200">
+    <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
       <div className="container mx-auto px-4 py-2 flex justify-between items-center">
         <div className="flex items-center">
           <Link to="/" className="flex items-center">
             <img 
-              src="/logos/logo.svg" 
+              src={isDarkMode() ? "/logos/logo-dark.svg" : "/logos/logo.svg"} 
               alt="CV Branding Buddy"
               className="h-8 w-auto"
               onError={(e) => {
@@ -50,7 +62,7 @@ const Header: React.FC = () => {
                 const parent = target.parentElement;
                 if (parent) {
                   const textFallback = document.createElement('span');
-                  textFallback.className = 'text-xl font-semibold';
+                  textFallback.className = 'text-xl font-semibold dark:text-white';
                   textFallback.textContent = 'CV Branding Buddy';
                   parent.appendChild(textFallback);
                 }
@@ -60,6 +72,8 @@ const Header: React.FC = () => {
         </div>
         
         <div className="flex items-center space-x-4">
+          <ThemeToggle iconOnly />
+          
           {location.pathname !== '/settings' && (
             <Link to="/settings">
               <Button variant="ghost" size="sm">

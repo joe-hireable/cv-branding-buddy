@@ -11,10 +11,12 @@ import {
   TabsList, 
   TabsTrigger 
 } from '@/components/ui/tabs';
-import { GripVertical, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { GripVertical, Eye, EyeOff, Loader2, Sun, Moon, Laptop } from 'lucide-react';
 import { useSettingsContext } from '@/contexts/SettingsContext';
 import { useDrag, useDrop } from 'react-dnd';
 import type { Identifier, XYCoord } from 'dnd-core';
+import { CustomButton } from '@/components/ui/custom-button';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 interface DragItem {
   index: number;
@@ -29,9 +31,10 @@ interface SectionItemProps {
   isVisible: boolean;
   moveSection: (dragIndex: number, hoverIndex: number) => void;
   toggleVisibility: (key: string) => void;
+  isDraggable?: boolean;
 }
 
-const SectionItem = ({ id, text, index, isVisible, moveSection, toggleVisibility }: SectionItemProps) => {
+const SectionItem = ({ id, text, index, isVisible, moveSection, toggleVisibility, isDraggable = true }: SectionItemProps) => {
   const ref = useRef<HTMLDivElement>(null);
   
   const [{ handlerId }, drop] = useDrop<
@@ -46,7 +49,7 @@ const SectionItem = ({ id, text, index, isVisible, moveSection, toggleVisibility
       };
     },
     hover(item: DragItem, monitor) {
-      if (!ref.current) {
+      if (!ref.current || !isDraggable) {
         return;
       }
       const dragIndex = item.index;
@@ -103,23 +106,29 @@ const SectionItem = ({ id, text, index, isVisible, moveSection, toggleVisibility
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
+    canDrag: () => isDraggable,
   });
 
-  drag(drop(ref));
+  // Only apply drag and drop refs if the section is draggable
+  const dragDropRef = isDraggable ? (ref: HTMLDivElement | null) => {
+    drag(drop(ref));
+  } : ref;
 
   return (
     <div
-      ref={ref}
-      className={`flex items-center justify-between p-3 border rounded-md bg-white mb-2 ${
-        isDragging ? 'opacity-50 border-dashed border-2 border-gray-400 bg-gray-50' : ''
+      ref={dragDropRef}
+      className={`flex items-center justify-between p-3 border rounded-md bg-white dark:bg-gray-800 dark:border-gray-700 mb-2 ${
+        isDragging ? 'opacity-50 border-dashed border-2 border-gray-400 dark:border-gray-600 bg-gray-50 dark:bg-gray-900' : ''
       }`}
       data-handler-id={handlerId}
     >
       <div className="flex items-center">
-        <div className="cursor-move px-1 mr-2">
-          <GripVertical className="h-5 w-5 text-gray-400" />
-        </div>
-        <Label htmlFor={`section-${id}`} className="font-medium">
+        {isDraggable && (
+          <div className="cursor-move px-1 mr-2">
+            <GripVertical className="h-5 w-5 text-gray-400 dark:text-gray-500" />
+          </div>
+        )}
+        <Label htmlFor={`section-${id}`} className="font-medium dark:text-white">
           {text}
         </Label>
       </div>
@@ -127,7 +136,7 @@ const SectionItem = ({ id, text, index, isVisible, moveSection, toggleVisibility
       <div className="flex items-center space-x-4">
         <div className="flex items-center space-x-2">
           <button
-            className="text-gray-500 hover:text-gray-700"
+            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
             onClick={() => toggleVisibility(id)}
           >
             {isVisible ? (
@@ -148,12 +157,11 @@ const SectionItem = ({ id, text, index, isVisible, moveSection, toggleVisibility
   );
 };
 
-const Settings: React.FC = () => {
-  const { settings, updateSettings, setSectionVisibility, setSectionOrder, saveSettings, isLoading, error } = useSettingsContext();
+const Settings = () => {
+  const { settings, updateSettings, setSectionVisibility, setSectionOrder, saveSettings, isLoading, error, setTheme } = useSettingsContext();
   const [activeTab, setActiveTab] = useState('sections');
   const [isSaving, setIsSaving] = useState(false);
   const [sections, setSections] = useState([
-    { key: 'personalInfo', label: 'Personal Information' },
     { key: 'profileStatement', label: 'Professional Summary' },
     { key: 'skills', label: 'Skills' },
     { key: 'experience', label: 'Work Experience' },
@@ -218,14 +226,18 @@ const Settings: React.FC = () => {
     handleSave();
   };
 
+  const handleThemeChange = (theme: 'light' | 'dark' | 'system') => {
+    setTheme(theme);
+  };
+
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
         <Header />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <Loader2 className="h-8 w-8 animate-spin mx-auto text-hireable-primary mb-4" />
-            <h2 className="text-xl font-medium text-gray-700">Loading settings...</h2>
+            <h2 className="text-xl font-medium text-gray-700 dark:text-gray-300">Loading settings...</h2>
           </div>
         </div>
       </div>
@@ -234,18 +246,19 @@ const Settings: React.FC = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
         <Header />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <h2 className="text-xl font-medium text-gray-700 mb-4">Error Loading Settings</h2>
-            <p className="text-red-500">{error}</p>
-            <Button 
+            <h2 className="text-xl font-medium text-gray-700 dark:text-gray-300 mb-4">Error Loading Settings</h2>
+            <p className="text-red-500 dark:text-red-400">{error}</p>
+            <CustomButton 
+              variant="primary"
               onClick={() => window.location.reload()} 
-              className="mt-4 bg-hireable-primary hover:bg-hireable-dark"
+              className="mt-4"
             >
               Retry
-            </Button>
+            </CustomButton>
           </div>
         </div>
       </div>
@@ -254,12 +267,12 @@ const Settings: React.FC = () => {
 
   if (!settings || !settings.defaultSectionVisibility) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
         <Header />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <Loader2 className="h-8 w-8 animate-spin mx-auto text-hireable-primary mb-4" />
-            <h2 className="text-xl font-medium text-gray-700">Initializing settings...</h2>
+            <h2 className="text-xl font-medium text-gray-700 dark:text-gray-300">Initialising settings...</h2>
           </div>
         </div>
       </div>
@@ -267,49 +280,52 @@ const Settings: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
       <Header />
       
       <main className="flex-1 container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Settings</h1>
-          <p className="text-gray-600 mb-6">Configure your default CV processing preferences</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Settings</h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">Configure your default CV processing preferences</p>
           
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div className="md:col-span-1">
-              <div className="bg-white rounded-md shadow-sm">
-                <div className="p-4 border-b">
-                  <Button
-                    variant={activeTab === 'sections' ? 'default' : 'ghost'}
-                    className={`w-full justify-start ${
-                      activeTab === 'sections' ? 'bg-hireable-primary hover:bg-hireable-dark' : ''
-                    }`}
+              <div className="bg-white dark:bg-gray-800 rounded-md shadow-sm">
+                <div className="p-4 border-b dark:border-gray-700">
+                  <CustomButton
+                    variant={activeTab === 'sections' ? 'primary' : 'secondary'}
+                    className="w-full justify-start"
                     onClick={() => setActiveTab('sections')}
                   >
                     CV Sections
-                  </Button>
+                  </CustomButton>
                 </div>
-                <div className="p-4 border-b">
-                  <Button
-                    variant={activeTab === 'anonymization' ? 'default' : 'ghost'}
-                    className={`w-full justify-start ${
-                      activeTab === 'anonymization' ? 'bg-hireable-primary hover:bg-hireable-dark' : ''
-                    }`}
-                    onClick={() => setActiveTab('anonymization')}
+                <div className="p-4 border-b dark:border-gray-700">
+                  <CustomButton
+                    variant={activeTab === 'anonymisation' ? 'primary' : 'secondary'}
+                    className="w-full justify-start"
+                    onClick={() => setActiveTab('anonymisation')}
                   >
-                    Anonymization
-                  </Button>
+                    Anonymisation
+                  </CustomButton>
                 </div>
-                <div className="p-4">
-                  <Button
-                    variant={activeTab === 'export' ? 'default' : 'ghost'}
-                    className={`w-full justify-start ${
-                      activeTab === 'export' ? 'bg-hireable-primary hover:bg-hireable-dark' : ''
-                    }`}
+                <div className="p-4 border-b dark:border-gray-700">
+                  <CustomButton
+                    variant={activeTab === 'export' ? 'primary' : 'secondary'}
+                    className="w-full justify-start"
                     onClick={() => setActiveTab('export')}
                   >
                     Export Format
-                  </Button>
+                  </CustomButton>
+                </div>
+                <div className="p-4">
+                  <CustomButton
+                    variant={activeTab === 'appearance' ? 'primary' : 'secondary'}
+                    className="w-full justify-start"
+                    onClick={() => setActiveTab('appearance')}
+                  >
+                    Appearance
+                  </CustomButton>
                 </div>
               </div>
             </div>
@@ -321,8 +337,8 @@ const Settings: React.FC = () => {
                     <CardContent className="pt-6">
                       <div className="flex justify-between items-center mb-4">
                         <h2 className="text-xl font-semibold">CV Section Arrangement</h2>
-                        <Button 
-                          className="bg-gray-900 hover:bg-gray-800"
+                        <CustomButton 
+                          variant="primary"
                           onClick={saveSectionOrder}
                           disabled={isSaving}
                         >
@@ -334,7 +350,7 @@ const Settings: React.FC = () => {
                           ) : (
                             'Save Order'
                           )}
-                        </Button>
+                        </CustomButton>
                       </div>
                       
                       <div className="space-y-2">
@@ -347,12 +363,14 @@ const Settings: React.FC = () => {
                             isVisible={settings.defaultSectionVisibility[section.key as keyof typeof settings.defaultSectionVisibility]}
                             moveSection={moveSection}
                             toggleVisibility={toggleSectionVisibility}
+                            isDraggable={section.key !== 'personalInfo'}
                           />
                         ))}
                       </div>
                       
-                      <Button 
-                        className="mt-6 bg-gradient-to-r from-hireable-secondary to-hireable-primary hover:opacity-90" 
+                      <CustomButton 
+                        variant="primary"
+                        className="mt-6" 
                         onClick={handleSave}
                         disabled={isSaving}
                       >
@@ -364,28 +382,28 @@ const Settings: React.FC = () => {
                         ) : (
                           'Save All Settings'
                         )}
-                      </Button>
+                      </CustomButton>
                     </CardContent>
                   </Card>
                 </TabsContent>
                 
-                <TabsContent value="anonymization" className="mt-0">
+                <TabsContent value="anonymisation" className="mt-0">
                   <Card>
                     <CardContent className="pt-6">
-                      <h2 className="text-xl font-semibold mb-6">Default Anonymization Settings</h2>
+                      <h2 className="text-xl font-semibold mb-6">Default Anonymisation Settings</h2>
                       
                       <div className="space-y-4">
                         <div className="flex items-center justify-between">
                           <div className="space-y-0.5">
-                            <Label htmlFor="auto-anonymize">Auto-anonymize all CVs</Label>
+                            <Label htmlFor="auto-anonymise">Auto-anonymise all CVs</Label>
                             <p className="text-sm text-gray-500">
-                              Automatically remove personal information from uploaded CVs
+                              Automatically anonymise personal information in all uploaded CVs
                             </p>
                           </div>
                           <Switch
-                            id="auto-anonymize"
-                            checked={settings.defaultAnonymize}
-                            onCheckedChange={(checked) => updateSettings({ defaultAnonymize: checked })}
+                            id="auto-anonymise"
+                            checked={settings.defaultAnonymise}
+                            onCheckedChange={(checked) => updateSettings({ defaultAnonymise: checked })}
                           />
                         </div>
                         
@@ -393,7 +411,7 @@ const Settings: React.FC = () => {
                           <div className="space-y-0.5">
                             <Label htmlFor="keep-original">Keep original files</Label>
                             <p className="text-sm text-gray-500">
-                              Store original CV files alongside anonymized versions
+                              Store original CV files alongside anonymised versions
                             </p>
                           </div>
                           <Switch
@@ -404,8 +422,9 @@ const Settings: React.FC = () => {
                         </div>
                       </div>
                       
-                      <Button 
-                        className="mt-6 bg-gradient-to-r from-hireable-secondary to-hireable-primary hover:opacity-90" 
+                      <CustomButton 
+                        variant="primary"
+                        className="mt-6" 
                         onClick={handleSave}
                         disabled={isSaving}
                       >
@@ -417,7 +436,7 @@ const Settings: React.FC = () => {
                         ) : (
                           'Save All Settings'
                         )}
-                      </Button>
+                      </CustomButton>
                     </CardContent>
                   </Card>
                 </TabsContent>
@@ -448,11 +467,12 @@ const Settings: React.FC = () => {
                       </div>
                       
                       <p className="text-sm text-gray-500 mt-2">
-                        Select your preferred export format(s) for processed CVs
+                        Choose your preferred format for exporting CVs
                       </p>
                       
-                      <Button 
-                        className="mt-6 bg-gradient-to-r from-hireable-secondary to-hireable-primary hover:opacity-90" 
+                      <CustomButton 
+                        variant="primary"
+                        className="mt-6" 
                         onClick={handleSave}
                         disabled={isSaving}
                       >
@@ -464,7 +484,67 @@ const Settings: React.FC = () => {
                         ) : (
                           'Save All Settings'
                         )}
-                      </Button>
+                      </CustomButton>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+                
+                <TabsContent value="appearance" className="mt-0">
+                  <Card>
+                    <CardContent className="pt-6">
+                      <h2 className="text-xl font-semibold mb-6 dark:text-white">Appearance Settings</h2>
+                      
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-medium dark:text-gray-200">Theme</h3>
+                        <RadioGroup 
+                          defaultValue={settings.theme} 
+                          onValueChange={(value) => handleThemeChange(value as 'light' | 'dark' | 'system')}
+                          className="flex flex-col space-y-3"
+                        >
+                          <div className="flex items-center space-x-2 rounded-md border p-4 dark:border-gray-700">
+                            <RadioGroupItem value="light" id="theme-light" />
+                            <Sun className="h-5 w-5 text-orange-500 mr-2" />
+                            <Label htmlFor="theme-light" className="flex-1">
+                              <div className="font-medium dark:text-white">Light</div>
+                              <div className="text-sm text-gray-500 dark:text-gray-400">Use light theme</div>
+                            </Label>
+                          </div>
+                          
+                          <div className="flex items-center space-x-2 rounded-md border p-4 dark:border-gray-700">
+                            <RadioGroupItem value="dark" id="theme-dark" />
+                            <Moon className="h-5 w-5 text-indigo-500 mr-2" />
+                            <Label htmlFor="theme-dark" className="flex-1">
+                              <div className="font-medium dark:text-white">Dark</div>
+                              <div className="text-sm text-gray-500 dark:text-gray-400">Use dark theme</div>
+                            </Label>
+                          </div>
+                          
+                          <div className="flex items-center space-x-2 rounded-md border p-4 dark:border-gray-700">
+                            <RadioGroupItem value="system" id="theme-system" />
+                            <Laptop className="h-5 w-5 text-gray-500 mr-2" />
+                            <Label htmlFor="theme-system" className="flex-1">
+                              <div className="font-medium dark:text-white">System</div>
+                              <div className="text-sm text-gray-500 dark:text-gray-400">Follow system preference</div>
+                            </Label>
+                          </div>
+                        </RadioGroup>
+                      </div>
+                      
+                      <CustomButton 
+                        variant="primary"
+                        className="mt-6" 
+                        onClick={handleSave}
+                        disabled={isSaving}
+                      >
+                        {isSaving ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Saving...
+                          </>
+                        ) : (
+                          'Save All Settings'
+                        )}
+                      </CustomButton>
                     </CardContent>
                   </Card>
                 </TabsContent>
@@ -474,13 +554,11 @@ const Settings: React.FC = () => {
         </div>
       </main>
       
-      <footer className="border-t py-4 mt-8">
-        <div className="container mx-auto px-4 text-sm text-gray-500 flex justify-between">
-          <p>© 2023 Hireable. All rights reserved.</p>
-          <div className="space-x-4">
-            <a href="#" className="hover:text-gray-700">Privacy Policy</a>
-            <a href="#" className="hover:text-gray-700">Terms of Service</a>
-          </div>
+      <footer className="border-t dark:border-gray-800 py-4 mt-8">
+        <div className="container mx-auto px-4 text-sm text-gray-500 dark:text-gray-400 flex justify-between">
+          <span>© 2024 CV Branding Buddy. All rights reserved.</span>
+          <a href="#" className="hover:text-gray-700 dark:hover:text-gray-300">Privacy Policy</a>
+          <a href="#" className="hover:text-gray-700 dark:hover:text-gray-300">Terms of Service</a>
         </div>
       </footer>
     </div>

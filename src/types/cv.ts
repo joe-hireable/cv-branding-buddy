@@ -131,9 +131,10 @@ export interface RecruiterProfile {
 export interface AppSettings {
   defaultSectionVisibility: CVSectionVisibility;
   defaultSectionOrder: CVSectionOrder;
-  defaultAnonymize: boolean;
+  defaultAnonymise: boolean;
   keepOriginalFiles: boolean;
   defaultExportFormat: "PDF" | "DOCX";
+  theme: "light" | "dark" | "system";
 }
 
 export interface BackendResponse {

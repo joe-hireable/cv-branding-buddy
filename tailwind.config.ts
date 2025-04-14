@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -72,6 +71,8 @@ export default {
 			},
 			backgroundImage: {
 				'hireable-gradient': 'linear-gradient(to right, #f472b6, #9333ea)',
+				'noise': 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.65\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\' opacity=\'0.15\'/%3E%3C/svg%3E")',
+				'button-gradient': 'radial-gradient(128.69% 203.89% at 21.33% 16.1%, #F600FE 0%, #C900FE 25%, #A136FF 50%, #5142F0 75%, #0033D9 93.9%)',
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -104,12 +105,30 @@ export default {
 						opacity: '1',
 						transform: 'translateY(0)'
 					}
+				},
+				'subtle-pulse': {
+					'0%, 100%': {
+						opacity: '1',
+					},
+					'50%': {
+						opacity: '0.85',
+					}
+				},
+				'subtle-shift': {
+					'0%, 100%': {
+						backgroundPosition: '0% 0%',
+					},
+					'50%': {
+						backgroundPosition: '100% 10%',
+					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
-				'fade-in': 'fade-in 0.3s ease-out'
+				'fade-in': 'fade-in 0.3s ease-out',
+				'subtle-pulse': 'subtle-pulse 5s ease-in-out infinite',
+				'subtle-shift': 'subtle-shift 8s ease-in-out infinite'
 			}
 		}
 	},

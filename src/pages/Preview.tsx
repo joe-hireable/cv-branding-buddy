@@ -17,7 +17,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
-import { DownloadCloud, MessageSquareText } from 'lucide-react';
+import { DownloadCloud, MessageSquareText, Eye, EyeOff } from 'lucide-react';
 import { 
   optimizeProfileStatement, 
   optimizeSkills, 
@@ -27,6 +27,7 @@ import {
 } from '@/services/api';
 import { cvParserService } from '@/services/cvParserApi';
 import { toast } from '@/components/ui/use-toast';
+import { CustomButton } from '@/components/ui/custom-button';
 
 const Preview = (): JSX.Element => {
   const [isOptimizingProfileStatement, setIsOptimizingProfileStatement] = useState(false);
@@ -48,26 +49,36 @@ const Preview = (): JSX.Element => {
     cv,
     sectionVisibility,
     sectionOrder,
-    isAnonymized,
+    isAnonymised,
     updateCvField,
     setSectionVisibility,
     setSectionOrder,
-    setIsAnonymized,
+    setIsAnonymised,
   } = useCVContext();
   
   const { profile } = useRecruiterContext();
   const navigate = useNavigate();
 
-  const moveSection = useCallback(
-    (dragIndex: number, hoverIndex: number) => {
-      const draggedSection = sectionOrder.sections[dragIndex];
-      const newSections = [...sectionOrder.sections];
-      newSections.splice(dragIndex, 1);
-      newSections.splice(hoverIndex, 0, draggedSection);
-      setSectionOrder(newSections);
-    },
-    [sectionOrder, setSectionOrder]
-  );
+  const moveSection = useCallback((dragIndex: number, hoverIndex: number) => {
+    // Get only non-personal info sections
+    const draggableSections = sectionOrder.sections.filter(key => key !== 'personalInfo');
+    
+    // Get the sections being dragged and where it's being moved to
+    const draggedSection = draggableSections[dragIndex];
+    const newSections = [...draggableSections];
+    
+    // Remove from old position and insert at new position
+    newSections.splice(dragIndex, 1);
+    newSections.splice(hoverIndex, 0, draggedSection);
+    
+    // Update the section order while preserving personalInfo if it exists
+    const personalInfoSection = sectionOrder.sections.find(key => key === 'personalInfo');
+    const finalOrder = personalInfoSection 
+      ? [personalInfoSection, ...newSections]
+      : newSections;
+    
+    setSectionOrder(finalOrder);
+  }, [sectionOrder, setSectionOrder]);
 
   const formatFeedback = (feedback: any): string => {
     if (!feedback) return 'Operation completed successfully';
@@ -670,18 +681,18 @@ const Preview = (): JSX.Element => {
           <div className="flex items-center gap-4">
             <div className="flex items-center space-x-2">
               <Switch
-                id="anonymize"
-                checked={isAnonymized}
-                onCheckedChange={setIsAnonymized}
+                id="anonymise"
+                checked={isAnonymised}
+                onCheckedChange={setIsAnonymised}
               />
-              <Label htmlFor="anonymize">Anonymize</Label>
+              <Label htmlFor="anonymise">Anonymise</Label>
             </div>
             
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="outline" className="gap-2">
+                <CustomButton variant="secondary" className="gap-2">
                   <DownloadCloud className="h-4 w-4" /> Export
-                </Button>
+                </CustomButton>
               </SheetTrigger>
               <SheetContent>
                 <SheetHeader>
@@ -740,72 +751,71 @@ const Preview = (): JSX.Element => {
               )}
               
               <div className="space-y-3">
-                {sectionOrder.sections.map((sectionKey, index) => {
-                  let sectionTitle = '';
-                  let canOptimize = false;
-                  const isVisible = sectionVisibility[sectionKey as keyof typeof sectionVisibility];
-                  
-                  switch(sectionKey) {
-                    case 'personalInfo':
-                      sectionTitle = 'Personal Information';
-                      break;
-                    case 'profileStatement':
-                      sectionTitle = 'Professional Summary';
-                      canOptimize = true;
-                      break;
-                    case 'skills':
-                      sectionTitle = 'Skills';
-                      canOptimize = true;
-                      break;
-                    case 'experience':
-                      sectionTitle = 'Work Experience';
-                      break;
-                    case 'achievements':
-                      sectionTitle = 'Key Achievements';
-                      canOptimize = true;
-                      break;
-                    case 'education':
-                      sectionTitle = 'Education';
-                      break;
-                    default:
-                      sectionTitle = sectionKey
-                        .replace(/([A-Z])/g, ' $1')
-                        .replace(/^./, str => str.toUpperCase());
-                  }
-                  
-                  return (
-                    <CVSection
-                      key={sectionKey}
-                      id={sectionKey}
-                      title={sectionTitle}
-                      isVisible={isVisible}
-                      onVisibilityToggle={() => setSectionVisibility(
-                        sectionKey as keyof typeof sectionVisibility,
-                        !isVisible
-                      )}
-                      onOptimize={
-                        canOptimize
-                          ? sectionKey === 'profileStatement'
-                            ? handleOptimizeProfileStatement
-                            : sectionKey === 'skills'
-                              ? handleOptimizeSkills
-                              : sectionKey === 'achievements'
-                                ? handleOptimizeAchievements
-                                : undefined
-                          : undefined
-                      }
-                      isOptimizing={
-                        (sectionKey === 'profileStatement' && isOptimizingProfileStatement) ||
-                        (sectionKey === 'skills' && isOptimizingSkills) ||
-                        (sectionKey === 'achievements' && isOptimizingAchievements)
-                      }
-                      index={index}
-                      moveSection={moveSection}
-                    >
-                      {renderSectionContent(sectionKey)}
-                    </CVSection>
-                  );
-                })}
+                {sectionOrder.sections
+                  .filter(sectionKey => sectionKey !== 'personalInfo')
+                  .map((sectionKey, index) => {
+                    let sectionTitle = '';
+                    let canOptimize = false;
+                    const isVisible = sectionVisibility[sectionKey as keyof typeof sectionVisibility];
+                    
+                    switch(sectionKey) {
+                      case 'profileStatement':
+                        sectionTitle = 'Professional Summary';
+                        canOptimize = true;
+                        break;
+                      case 'skills':
+                        sectionTitle = 'Skills';
+                        canOptimize = true;
+                        break;
+                      case 'experience':
+                        sectionTitle = 'Work Experience';
+                        break;
+                      case 'achievements':
+                        sectionTitle = 'Key Achievements';
+                        canOptimize = true;
+                        break;
+                      case 'education':
+                        sectionTitle = 'Education';
+                        break;
+                      default:
+                        sectionTitle = sectionKey
+                          .replace(/([A-Z])/g, ' $1')
+                          .replace(/^./, str => str.toUpperCase());
+                    }
+                    
+                    return (
+                      <CVSection
+                        key={sectionKey}
+                        id={sectionKey}
+                        title={sectionTitle}
+                        isVisible={isVisible}
+                        onVisibilityToggle={() => setSectionVisibility(
+                          sectionKey as keyof typeof sectionVisibility,
+                          !isVisible
+                        )}
+                        onOptimize={
+                          canOptimize
+                            ? sectionKey === 'profileStatement'
+                              ? handleOptimizeProfileStatement
+                              : sectionKey === 'skills'
+                                ? handleOptimizeSkills
+                                : sectionKey === 'achievements'
+                                  ? handleOptimizeAchievements
+                                  : undefined
+                            : undefined
+                        }
+                        isOptimizing={
+                          (sectionKey === 'profileStatement' && isOptimizingProfileStatement) ||
+                          (sectionKey === 'skills' && isOptimizingSkills) ||
+                          (sectionKey === 'achievements' && isOptimizingAchievements)
+                        }
+                        index={index}
+                        moveSection={moveSection}
+                      >
+                        {renderSectionContent(sectionKey)}
+                      </CVSection>
+                    );
+                  })}
               </div>
             </div>
           </div>
@@ -815,7 +825,7 @@ const Preview = (): JSX.Element => {
             <div className="bg-white rounded-md shadow-sm p-6">
               <CVPreview 
                 cv={cv} 
-                isAnonymized={isAnonymized} 
+                isAnonymised={isAnonymised} 
                 sectionVisibility={sectionVisibility}
                 sectionOrder={sectionOrder.sections}
               />
