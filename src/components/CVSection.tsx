@@ -122,7 +122,7 @@ const CVSection: React.FC<CVSectionProps> = ({
     <div
       ref={ref}
       className={cn(
-        'mb-4 border rounded-md transition-all duration-200 bg-card',
+        'mb-4 border rounded-md transition-all duration-200 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700',
         isVisible ? '' : 'opacity-50',
         isDragging ? 'opacity-100 border-none bg-gradient-to-r from-[#F600FE] via-[#A136FF] to-[#0033D9] text-white shadow-lg' : '',
         isDraggingAny ? 'cursor-grabbing' : ''
@@ -131,13 +131,13 @@ const CVSection: React.FC<CVSectionProps> = ({
       onMouseLeave={() => setIsHovered(false)}
       data-handler-id={handlerId}
     >
-      <div className="flex items-center p-4 border-b border-border">
+      <div className="flex items-center p-4 border-b border-gray-200 dark:border-gray-700">
         {isDraggable && (
           <div className={`px-1 mr-2 ${isDraggingAny ? 'cursor-grabbing' : 'cursor-grab'}`}>
-            <GripVertical className={cn("h-5 w-5", isDragging ? "text-white" : "text-muted-foreground")} />
+            <GripVertical className={cn("h-5 w-5", isDragging ? "text-white" : "text-gray-600 dark:text-gray-400")} />
           </div>
         )}
-        <h3 className={cn("text-sm font-medium flex-1", isDragging && "text-white")}>{title}</h3>
+        <h3 className={cn("text-sm font-medium flex-1 text-gray-900 dark:text-gray-100", isDragging && "text-white")}>{title}</h3>
         <div className="flex space-x-2">
           {onOptimize && !isDraggingAny && !isDragging && (
             <GradientButton
@@ -165,7 +165,7 @@ const CVSection: React.FC<CVSectionProps> = ({
               variant="ghost"
               size="sm"
               onClick={onEdit}
-              className="text-muted-foreground hover:text-foreground"
+              className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
             >
               <Edit className="h-4 w-4" />
             </Button>
@@ -175,7 +175,7 @@ const CVSection: React.FC<CVSectionProps> = ({
               variant="ghost"
               size="sm"
               onClick={onVisibilityToggle}
-              className="text-muted-foreground hover:text-foreground"
+              className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
             >
               {isVisible ? (
                 <Eye className="h-4 w-4" />

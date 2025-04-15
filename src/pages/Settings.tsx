@@ -20,6 +20,13 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { cn } from '@/lib/utils';
 import { GradientButton, SecondaryGradientButton } from '@/components/ui/brand-components';
 import { GradientSwitch, GradientCheckbox, dragAndDropStyles } from '@/components/ui/gradient-form-components';
+import { toast } from '@/components/ui/use-toast';
+import { AppSettings } from '@/types/settings';
+import { CVSectionVisibility } from '@/types/cv';
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
+import { DraggableSection } from '@/components/DraggableSection';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface DragItem {
   index: number;
@@ -175,23 +182,43 @@ const Settings = () => {
   ]);
 
   useEffect(() => {
-    if (settings?.defaultSectionOrder?.sections) {
+    if (settings?.default_section_order?.sections) {
       const orderedSections = [...sections];
       
       orderedSections.sort((a, b) => {
-        const aIndex = settings.defaultSectionOrder.sections.indexOf(a.key);
-        const bIndex = settings.defaultSectionOrder.sections.indexOf(b.key);
+        const aIndex = settings.default_section_order.sections.indexOf(a.key);
+        const bIndex = settings.default_section_order.sections.indexOf(b.key);
         return aIndex - bIndex;
       });
       
       setSections(orderedSections);
     }
-  }, [settings?.defaultSectionOrder]);
+  }, [settings?.default_section_order]);
 
   const handleSave = async () => {
+    if (!settings) return;
+    
     setIsSaving(true);
     try {
-      await saveSettings();
+      await saveSettings({
+        default_section_visibility: settings.default_section_visibility,
+        default_section_order: settings.default_section_order,
+        default_anonymise: settings.default_anonymise,
+        keep_original_files: settings.keep_original_files,
+        default_export_format: settings.default_export_format,
+        theme: settings.theme
+      });
+      toast({
+        title: "Settings saved",
+        description: "Your settings have been saved successfully.",
+      });
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save settings. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsSaving(false);
     }
@@ -199,7 +226,7 @@ const Settings = () => {
 
   const handleExportFormatChange = (format: 'PDF' | 'DOCX') => {
     console.log('Changing export format to:', format);
-    updateSettings({ defaultExportFormat: format });
+    updateSettings({ default_export_format: format });
   };
 
   const moveSection = useCallback((dragIndex: number, hoverIndex: number) => {
@@ -212,31 +239,62 @@ const Settings = () => {
   }, []);
 
   const toggleSectionVisibility = (key: string) => {
+    if (!settings?.default_section_visibility) return;
+    
     setSectionVisibility(
-      key as keyof typeof settings.defaultSectionVisibility,
-      !settings.defaultSectionVisibility[key as keyof typeof settings.defaultSectionVisibility]
+      key as keyof typeof settings.default_section_visibility,
+      !settings.default_section_visibility[key as keyof typeof settings.default_section_visibility]
     );
   };
 
-  const saveSectionOrder = () => {
-    console.log('Saving section order:', sections);
-    const sectionKeys = sections.map(section => section.key);
-    setSectionOrder(sectionKeys);
-    handleSave();
+  const saveSectionOrder = async () => {
+    if (!settings) return;
+    
+    try {
+      setIsSaving(true);
+      const sectionKeys = sections.map(section => section.key);
+      
+      // Update the section order in the context
+      setSectionOrder(sectionKeys);
+      
+      // Save the updated settings to the database
+      await saveSettings({
+        ...settings,
+        default_section_order: {
+          sections: sectionKeys
+        }
+      });
+      
+      toast({
+        title: "Section order saved",
+        description: "Your CV section arrangement has been updated.",
+      });
+    } catch (error) {
+      console.error('Error saving section order:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save section order. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleThemeChange = (theme: 'light' | 'dark' | 'system') => {
     setTheme(theme);
   };
 
-  if (isLoading) {
+  if (isLoading || !settings) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
         <Header />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <Loader2 className="h-8 w-8 animate-spin mx-auto text-hireable-primary mb-4" />
-            <h2 className="text-xl font-medium text-gray-700 dark:text-gray-300">Loading settings...</h2>
+            <h2 className="text-xl font-medium text-gray-700 dark:text-gray-300">
+              {isLoading ? 'Loading settings...' : 'Initializing settings...'}
+            </h2>
           </div>
         </div>
       </div>
@@ -258,20 +316,6 @@ const Settings = () => {
             >
               Retry
             </CustomButton>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!settings || !settings.defaultSectionVisibility) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
-        <Header />
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto text-hireable-primary mb-4" />
-            <h2 className="text-xl font-medium text-gray-700 dark:text-gray-300">Initialising settings...</h2>
           </div>
         </div>
       </div>
@@ -390,7 +434,7 @@ const Settings = () => {
                             id={section.key}
                             text={section.label}
                             index={index}
-                            isVisible={settings.defaultSectionVisibility[section.key as keyof typeof settings.defaultSectionVisibility]}
+                            isVisible={settings?.default_section_visibility?.[section.key] ?? true}
                             moveSection={moveSection}
                             toggleVisibility={toggleSectionVisibility}
                             isDraggable={section.key !== 'personalInfo'}
@@ -432,8 +476,8 @@ const Settings = () => {
                           </div>
                           <GradientSwitch
                             id="auto-anonymise"
-                            checked={settings.defaultAnonymise}
-                            onCheckedChange={(checked) => updateSettings({ defaultAnonymise: checked })}
+                            checked={settings.default_anonymise}
+                            onCheckedChange={(checked) => updateSettings({ default_anonymise: checked })}
                           />
                         </div>
                         
@@ -446,8 +490,8 @@ const Settings = () => {
                           </div>
                           <GradientSwitch
                             id="keep-original"
-                            checked={settings.keepOriginalFiles}
-                            onCheckedChange={(checked) => updateSettings({ keepOriginalFiles: checked })}
+                            checked={settings.keep_original_files}
+                            onCheckedChange={(checked) => updateSettings({ keep_original_files: checked })}
                           />
                         </div>
                       </div>
@@ -479,7 +523,7 @@ const Settings = () => {
                         <div className="flex items-center space-x-2">
                           <GradientCheckbox
                             id="pdf-format"
-                            checked={settings.defaultExportFormat === 'PDF'}
+                            checked={settings.default_export_format === 'PDF'}
                             onCheckedChange={() => handleExportFormatChange('PDF')}
                           />
                           <Label htmlFor="pdf-format" className="dark:text-white">PDF</Label>
@@ -488,7 +532,7 @@ const Settings = () => {
                         <div className="flex items-center space-x-2">
                           <GradientCheckbox
                             id="docx-format"
-                            checked={settings.defaultExportFormat === 'DOCX'}
+                            checked={settings.default_export_format === 'DOCX'}
                             onCheckedChange={() => handleExportFormatChange('DOCX')}
                           />
                           <Label htmlFor="docx-format" className="dark:text-white">DOCX</Label>

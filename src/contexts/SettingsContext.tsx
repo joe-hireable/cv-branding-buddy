@@ -1,14 +1,15 @@
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect, useRef } from 'react';
 import { AppSettings, CVSectionVisibility, CVSectionOrder } from '@/types/cv';
 import { getAppSettings, updateAppSettings } from '@/services/api';
 import { toast } from '@/components/ui/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface SettingsContextType {
   settings: AppSettings;
   updateSettings: (settings: Partial<AppSettings>) => void;
   setSectionVisibility: (section: keyof CVSectionVisibility, isVisible: boolean) => void;
   setSectionOrder: (sections: string[]) => void;
-  saveSettings: () => Promise<void>;
+  saveSettings: (newSettings: AppSettings) => Promise<void>;
   isLoading: boolean;
   error: string | null;
   setTheme: (theme: 'light' | 'dark' | 'system') => void;
@@ -44,64 +45,88 @@ const defaultSectionOrder = [
 ];
 
 const defaultSettings: AppSettings = {
-  defaultSectionVisibility: defaultSectionVisibility,
-  defaultSectionOrder: { sections: defaultSectionOrder },
-  defaultAnonymise: false,
-  keepOriginalFiles: true,
-  defaultExportFormat: 'PDF',
+  default_section_visibility: defaultSectionVisibility,
+  default_section_order: { sections: defaultSectionOrder },
+  default_anonymise: false,
+  keep_original_files: true,
+  default_export_format: 'PDF',
   theme: 'light',
 };
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
 
-// Define the hook separately
-function useSettingsContext() {
-  const context = useContext(SettingsContext);
-  if (context === undefined) {
-    throw new Error('useSettingsContext must be used within a SettingsProvider');
-  }
-  return context;
-}
-
-// Define the provider component
-function SettingsProvider({ children }: { children: ReactNode }) {
+export const SettingsProvider = ({ children }: { children: ReactNode }) => {
   const [settings, setSettings] = useState<AppSettings>(defaultSettings);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
+  const { user } = useAuth();
+  const initializationRef = useRef(false);
 
-  // Initialize settings from API when the component mounts
+  // Initialize settings from API when the component mounts or user changes
   useEffect(() => {
-    if (isInitialized) return;
-    
+    // Prevent multiple initializations
+    if (initializationRef.current) return;
+    initializationRef.current = true;
+
     const initializeSettings = async () => {
       try {
-        console.log('[SettingsContext] Initializing settings from API...');
+        console.log('[SettingsContext] Starting initialization...');
         setIsLoading(true);
         setError(null);
         
-        const apiSettings = await getAppSettings();
-        console.log('[SettingsContext] Received settings from API:', apiSettings);
-        
-        // Ensure the section order exists
-        if (!apiSettings.defaultSectionOrder) {
-          apiSettings.defaultSectionOrder = defaultSettings.defaultSectionOrder;
+        if (!user) {
+          console.log('[SettingsContext] No user authenticated, using default settings');
+          setSettings(defaultSettings);
+          setIsLoading(false);
+          setIsInitialized(true);
+          return;
         }
         
-        setSettings(apiSettings);
+        console.log('[SettingsContext] Loading settings from API for user:', user.id);
+        const apiSettings = await getAppSettings(user.id);
+        console.log('[SettingsContext] Received settings from API:', apiSettings);
+        
+        if (!apiSettings) {
+          console.log('[SettingsContext] No settings found, using default settings');
+          setSettings(defaultSettings);
+          setIsLoading(false);
+          setIsInitialized(true);
+          return;
+        }
+        
+        // Transform the settings to match the frontend's expected format
+        const transformedSettings: AppSettings = {
+          default_section_visibility: apiSettings.default_section_visibility || defaultSettings.default_section_visibility,
+          default_section_order: {
+            sections: apiSettings.default_section_order?.sections || defaultSettings.default_section_order.sections
+          },
+          default_anonymise: apiSettings.default_anonymise ?? defaultSettings.default_anonymise,
+          keep_original_files: apiSettings.keep_original_files ?? defaultSettings.keep_original_files,
+          default_export_format: apiSettings.default_export_format || defaultSettings.default_export_format,
+          theme: apiSettings.theme || defaultSettings.theme
+        };
+        
+        console.log('[SettingsContext] Setting transformed settings:', transformedSettings);
+        setSettings(transformedSettings);
       } catch (error) {
-        console.error('[SettingsContext] Failed to initialize settings from API:', error);
-        setError('Failed to load settings. Please try again later.');
-        // Fallback to default settings if API fails
-        console.log('[SettingsContext] Using default settings');
+        console.error('[SettingsContext] Failed to initialize settings:', error);
+        setError(error instanceof Error ? error.message : 'Failed to load settings. Please try again later.');
+        setSettings(defaultSettings);
       } finally {
         setIsLoading(false);
         setIsInitialized(true);
+        console.log('[SettingsContext] Initialization complete');
       }
     };
 
     initializeSettings();
-  }, [isInitialized]);
+
+    // Cleanup function
+    return () => {
+      initializationRef.current = false;
+    };
+  }, [user?.id]); // Only depend on user.id changes
 
   // Apply theme when it changes
   useEffect(() => {
@@ -139,8 +164,8 @@ function SettingsProvider({ children }: { children: ReactNode }) {
     console.log(`[SettingsContext] Setting visibility for ${section} to ${isVisible}`);
     setSettings(prev => ({
       ...prev,
-      defaultSectionVisibility: {
-        ...prev.defaultSectionVisibility,
+      default_section_visibility: {
+        ...prev.default_section_visibility,
         [section]: isVisible,
       },
     }));
@@ -150,34 +175,25 @@ function SettingsProvider({ children }: { children: ReactNode }) {
     console.log('[SettingsContext] Setting section order to:', sections);
     setSettings(prev => ({
       ...prev,
-      defaultSectionOrder: {
+      default_section_order: {
         sections: sections,
       },
     }));
   };
   
-  const saveSettings = async () => {
+  const saveSettings = async (newSettings: AppSettings) => {
+    if (!user) {
+      throw new Error('User must be authenticated to save settings');
+    }
+
     try {
-      console.log('[SettingsContext] Saving settings to API:', settings);
-      setIsLoading(true);
-      const updatedSettings = await updateAppSettings(settings);
-      setSettings(updatedSettings);
-      toast({
-        title: "Settings updated",
-        description: "Your settings have been saved successfully.",
-      });
-      return Promise.resolve();
+      const { error } = await updateAppSettings(newSettings, user.id);
+      if (error) throw error;
+      
+      setSettings(newSettings);
     } catch (error) {
-      console.error('[SettingsContext] Error saving settings:', error);
-      setError('Failed to save settings. Please try again later.');
-      toast({
-        title: "Update failed",
-        description: "Failed to save your settings. Please try again.",
-        variant: "destructive",
-      });
-      return Promise.reject(error);
-    } finally {
-      setIsLoading(false);
+      console.error('Error saving settings:', error);
+      throw error;
     }
   };
 
@@ -205,7 +221,12 @@ function SettingsProvider({ children }: { children: ReactNode }) {
       {children}
     </SettingsContext.Provider>
   );
-}
+};
 
-// Export both the provider and the hook
-export { SettingsProvider, useSettingsContext };
+export const useSettingsContext = () => {
+  const context = useContext(SettingsContext);
+  if (context === undefined) {
+    throw new Error('useSettingsContext must be used within a SettingsProvider');
+  }
+  return context;
+};

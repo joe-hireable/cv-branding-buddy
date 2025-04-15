@@ -2,11 +2,11 @@
  * @file API Service
  * @description Base API service with error handling and type safety
  */
-
 import { createClient } from '@supabase/supabase-js';
-import { Database } from '@/types/supabase';
+import type { Database } from '@/types/supabase';
 import { CV, BackendResponse, RecruiterProfile, AppSettings, Experience, Skill } from '@/types/cv';
 import { cvParserService } from './cvParserApi';
+import { supabase } from '@/integrations/supabase/client';
 
 /**
  * API error class for handling API-specific errors
@@ -107,39 +107,144 @@ export async function optimiseProfileStatement(
   cv: File | string,
   jobDescription?: string
 ): Promise<BackendResponse> {
-  return cvParserService.optimiseProfileStatement(cv, jobDescription);
+  try {
+    // If cv is a string (CV ID), fetch the CV data from Supabase
+    if (typeof cv === 'string') {
+      const { data, error } = await this.supabase
+        .from('cvs')
+        .select('parsed_data')
+        .eq('id', cv)
+        .single();
+
+      if (error) throw error;
+      if (!data?.parsed_data) throw new Error('CV data not found');
+
+      // Use the profile statement from the parsed data
+      cv = data.parsed_data.profileStatement;
+    }
+
+    return cvParserService.optimiseProfileStatement(cv, jobDescription);
+  } catch (error) {
+    console.error('Error in optimiseProfileStatement:', error);
+    throw error;
+  }
 }
 
 export async function optimiseSkills(
   cv: File | string,
   jobDescription?: string
 ): Promise<BackendResponse> {
-  return cvParserService.optimiseSkills(cv, jobDescription);
+  try {
+    // If cv is a string (CV ID), fetch the CV data from Supabase
+    if (typeof cv === 'string') {
+      const { data, error } = await this.supabase
+        .from('cvs')
+        .select('parsed_data')
+        .eq('id', cv)
+        .single();
+
+      if (error) throw error;
+      if (!data?.parsed_data) throw new Error('CV data not found');
+
+      // Use the skills from the parsed data
+      cv = data.parsed_data.skills;
+    }
+
+    return cvParserService.optimiseSkills(cv, jobDescription);
+  } catch (error) {
+    console.error('Error in optimiseSkills:', error);
+    throw error;
+  }
 }
 
 export async function optimiseAchievements(
   cv: File | string,
   jobDescription?: string
 ): Promise<BackendResponse> {
-  return cvParserService.optimiseAchievements(cv, jobDescription);
+  try {
+    // If cv is a string (CV ID), fetch the CV data from Supabase
+    if (typeof cv === 'string') {
+      const { data, error } = await this.supabase
+        .from('cvs')
+        .select('parsed_data')
+        .eq('id', cv)
+        .single();
+
+      if (error) throw error;
+      if (!data?.parsed_data) throw new Error('CV data not found');
+
+      // Use the achievements from the parsed data
+      cv = data.parsed_data.achievements;
+    }
+
+    return cvParserService.optimiseAchievements(cv, jobDescription);
+  } catch (error) {
+    console.error('Error in optimiseAchievements:', error);
+    throw error;
+  }
 }
 
 export async function optimiseExperience(
   cv: File | string,
-  experienceIndex: number,
   jobDescription?: string
 ): Promise<BackendResponse> {
-  return cvParserService.optimiseExperience(cv, experienceIndex, jobDescription);
+  try {
+    // If cv is a string (CV ID), fetch the CV data from Supabase
+    if (typeof cv === 'string') {
+      const { data, error } = await this.supabase
+        .from('cvs')
+        .select('parsed_data')
+        .eq('id', cv)
+        .single();
+
+      if (error) throw error;
+      if (!data?.parsed_data) throw new Error('CV data not found');
+
+      // Use the experience from the parsed data
+      cv = data.parsed_data.experience;
+    }
+
+    return cvParserService.optimiseExperience(cv, jobDescription);
+  } catch (error) {
+    console.error('Error in optimiseExperience:', error);
+    throw error;
+  }
 }
 
-export async function generateDocument(cv: CV, format: 'PDF' | 'DOCX', recruiterProfile: RecruiterProfile): Promise<string> {
-  // TODO: Implement document generation using the CV Parser API
-  // For now, keeping the mock implementation
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve('https://example.com/documents/cv-12345.' + format.toLowerCase());
-    }, 3000);
-  });
+export async function generateDocument(
+  cv: CV,
+  format: 'PDF' | 'DOCX',
+  recruiterProfile: RecruiterProfile
+): Promise<string> {
+  try {
+    const formData = new FormData();
+    
+    // Add CV data
+    formData.append('cv_data', JSON.stringify(cv));
+    
+    // Add recruiter profile
+    formData.append('recruiter_profile', JSON.stringify(recruiterProfile));
+    
+    // Add format
+    formData.append('format', format);
+    
+    // Make the API call
+    const response = await cvParserService.generateDocument(formData);
+    
+    if (response.status === 'error') {
+      throw new Error(response.errors?.[0] || 'Failed to generate document');
+    }
+    
+    // Return the URL to the generated document
+    return response.data.documentUrl;
+  } catch (error) {
+    console.error('Error generating document:', error);
+    throw new APIError(
+      error instanceof Error ? error.message : 'Failed to generate document',
+      500,
+      'DOCUMENT_GENERATION_ERROR'
+    );
+  }
 }
 
 export async function getRecruiterProfile(): Promise<RecruiterProfile> {
@@ -168,28 +273,43 @@ export async function updateRecruiterProfile(profile: RecruiterProfile): Promise
   });
 }
 
-export async function getAppSettings(): Promise<AppSettings> {
-  // Simulate API call
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        defaultSectionVisibility: {
-          personalInfo: true,
+type Settings = Database['public']['Tables']['settings']['Row']
+type SettingsInsert = Database['public']['Tables']['settings']['Insert']
+type SettingsUpdate = Database['public']['Tables']['settings']['Update']
+
+export const getAppSettings = async (userId: string): Promise<Settings> => {
+  console.log('[getAppSettings] Fetching settings for user:', userId);
+  
+  try {
+    const { data, error } = await supabase
+      .from('settings')
+      .select('*')
+      .eq('user_id', userId)
+      .single()
+
+    if (error) {
+      console.error('[getAppSettings] Supabase error:', error);
+      throw new Error(`Failed to fetch settings: ${error.message}`)
+    }
+
+    console.log('[getAppSettings] Received data:', data);
+
+    if (!data) {
+      console.log('[getAppSettings] No settings found, creating default settings');
+      const defaultSettings: SettingsInsert = {
+        user_id: userId,
+        default_section_visibility: {
           profileStatement: true,
           skills: true,
           experience: true,
           education: true,
-          certifications: true,
           achievements: true,
+          certifications: true,
           languages: true,
-          professionalMemberships: true,
-          earlierCareer: false,
-          publications: false,
-          additionalDetails: false,
+          references: true
         },
-        defaultSectionOrder: {
+        default_section_order: {
           sections: [
-            'personalInfo',
             'profileStatement',
             'skills',
             'experience',
@@ -197,25 +317,73 @@ export async function getAppSettings(): Promise<AppSettings> {
             'achievements',
             'certifications',
             'languages',
-            'professionalMemberships',
-            'publications',
-            'earlierCareer',
-            'additionalDetails',
+            'references'
           ]
         },
-        defaultAnonymize: false,
-        keepOriginalFiles: true,
-        defaultExportFormat: 'PDF'
-      });
-    }, 1000);
-  });
+        default_anonymise: false,
+        keep_original_files: true,
+        default_export_format: 'PDF',
+        theme: 'system'
+      }
+
+      const { data: newData, error: insertError } = await supabase
+        .from('settings')
+        .insert(defaultSettings)
+        .select()
+        .single()
+
+      if (insertError) {
+        console.error('[getAppSettings] Error creating default settings:', insertError);
+        throw new Error(`Failed to create default settings: ${insertError.message}`)
+      }
+
+      console.log('[getAppSettings] Created default settings:', newData);
+      return newData
+    }
+
+    // Transform the data to match the frontend's expected format
+    const sectionOrder = typeof data.default_section_order === 'string' 
+      ? JSON.parse(data.default_section_order)
+      : data.default_section_order;
+
+    const transformedData = {
+      ...data,
+      default_section_visibility: data.default_section_visibility || {},
+      default_section_order: {
+        sections: Array.isArray(sectionOrder) ? sectionOrder : (sectionOrder?.sections || [])
+      }
+    };
+
+    console.log('[getAppSettings] Transformed data:', transformedData);
+    return transformedData;
+  } catch (error) {
+    console.error('[getAppSettings] Unexpected error:', error);
+    throw error;
+  }
 }
 
-export async function updateAppSettings(settings: AppSettings): Promise<AppSettings> {
-  // Simulate API call
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(settings);
-    }, 1000);
-  });
+export const updateAppSettings = async (settings: SettingsUpdate, userId: string): Promise<Settings> => {
+  // Transform the settings to match the database schema
+  const dbSettings: SettingsUpdate = {
+    ...settings,
+    default_section_order: settings.default_section_order || [],
+    default_section_visibility: settings.default_section_visibility,
+    default_anonymise: settings.default_anonymise,
+    keep_original_files: settings.keep_original_files,
+    default_export_format: settings.default_export_format,
+    theme: settings.theme
+  };
+
+  const { data, error } = await supabase
+    .from('settings')
+    .update(dbSettings)
+    .eq('user_id', userId)
+    .select()
+    .single()
+
+  if (error) {
+    throw new Error(`Failed to update settings: ${error.message}`)
+  }
+
+  return data
 }

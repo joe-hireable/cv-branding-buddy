@@ -1,8 +1,3 @@
-/**
- * @file Supabase Types
- * @description Type definitions for Supabase database schema
- */
-
 export type Json =
   | string
   | number
@@ -14,94 +9,85 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
-      profiles: {
+      settings: {
         Row: {
           id: string
+          user_id: string
+          default_section_visibility: Json
+          default_section_order: Json
+          default_anonymise: boolean
+          keep_original_files: boolean
+          default_export_format: string
+          theme: string
           created_at: string
           updated_at: string
-          email: string
-          first_name: string
-          last_name: string
-          profile_picture: string | null
-          role: 'admin' | 'user' | 'recruiter'
         }
         Insert: {
-          id: string
+          id?: string
+          user_id: string
+          default_section_visibility?: Json
+          default_section_order?: Json
+          default_anonymise?: boolean
+          keep_original_files?: boolean
+          default_export_format?: string
+          theme?: string
           created_at?: string
           updated_at?: string
-          email: string
-          first_name: string
-          last_name: string
-          profile_picture?: string | null
-          role?: 'admin' | 'user' | 'recruiter'
         }
         Update: {
           id?: string
+          user_id?: string
+          default_section_visibility?: Json
+          default_section_order?: Json
+          default_anonymise?: boolean
+          keep_original_files?: boolean
+          default_export_format?: string
+          theme?: string
           created_at?: string
           updated_at?: string
-          email?: string
-          first_name?: string
-          last_name?: string
-          profile_picture?: string | null
-          role?: 'admin' | 'user' | 'recruiter'
         }
+        Relationships: [
+          {
+            foreignKeyName: "settings_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       cvs: {
         Row: {
           id: string
+          candidate_id: string
+          uploader_id: string
+          original_filename: string
+          original_file_storage_path: string
+          parsed_data: Json
+          status: string
           created_at: string
           updated_at: string
-          user_id: string
-          title: string
-          is_primary: boolean
-          content: Json
         }
         Insert: {
           id?: string
+          candidate_id: string
+          uploader_id: string
+          original_filename: string
+          original_file_storage_path: string
+          parsed_data?: Json
+          status?: string
           created_at?: string
           updated_at?: string
-          user_id: string
-          title: string
-          is_primary?: boolean
-          content: Json
         }
         Update: {
           id?: string
+          candidate_id?: string
+          uploader_id?: string
+          original_filename?: string
+          original_file_storage_path?: string
+          parsed_data?: Json
+          status?: string
           created_at?: string
           updated_at?: string
-          user_id?: string
-          title?: string
-          is_primary?: boolean
-          content?: Json
-        }
-      }
-      settings: {
-        Row: {
-          id: string
-          created_at: string
-          updated_at: string
-          user_id: string
-          theme: 'light' | 'dark' | 'system'
-          notifications_enabled: boolean
-          email_notifications: boolean
-        }
-        Insert: {
-          id?: string
-          created_at?: string
-          updated_at?: string
-          user_id: string
-          theme?: 'light' | 'dark' | 'system'
-          notifications_enabled?: boolean
-          email_notifications?: boolean
-        }
-        Update: {
-          id?: string
-          created_at?: string
-          updated_at?: string
-          user_id?: string
-          theme?: 'light' | 'dark' | 'system'
-          notifications_enabled?: boolean
-          email_notifications?: boolean
         }
       }
     }
@@ -114,5 +100,8 @@ export interface Database {
     Enums: {
       [_ in never]: never
     }
+    CompositeTypes: {
+      // ... existing composite types ...
+    }
   }
-} 
+}

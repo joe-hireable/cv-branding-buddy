@@ -1,8 +1,8 @@
-import { createClient } from '../client'
+import { supabase } from '../client'
 import { handleError } from './error-handler'
 
 export class MigrationManager {
-  private client = createClient()
+  private client = supabase
 
   async createMigration(name: string, up: string, down: string) {
     const { data, error } = await this.client

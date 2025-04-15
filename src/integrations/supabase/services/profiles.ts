@@ -1,4 +1,4 @@
-import { createClient } from '../client'
+import { supabase } from '../client'
 import type { Database } from '../types'
 
 type Profile = Database['public']['Tables']['profiles']['Row']
@@ -7,7 +7,7 @@ type ProfileUpdate = Database['public']['Tables']['profiles']['Update']
 
 export const profileService = {
   async create(data: ProfileInsert) {
-    const { data: profile, error } = await createClient()
+    const { data: profile, error } = await supabase
       .from('profiles')
       .insert(data)
       .select()
@@ -18,7 +18,7 @@ export const profileService = {
   },
 
   async getById(id: string) {
-    const { data: profile, error } = await createClient()
+    const { data: profile, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', id)
@@ -29,7 +29,7 @@ export const profileService = {
   },
 
   async getByEmail(email: string) {
-    const { data: profile, error } = await createClient()
+    const { data: profile, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('email', email)
@@ -40,7 +40,7 @@ export const profileService = {
   },
 
   async update(id: string, data: ProfileUpdate) {
-    const { data: profile, error } = await createClient()
+    const { data: profile, error } = await supabase
       .from('profiles')
       .update(data)
       .eq('id', id)
@@ -52,7 +52,7 @@ export const profileService = {
   },
 
   async delete(id: string) {
-    const { error } = await createClient()
+    const { error } = await supabase
       .from('profiles')
       .delete()
       .eq('id', id)
@@ -61,7 +61,7 @@ export const profileService = {
   },
 
   async getByCompanyId(companyId: string) {
-    const { data: profiles, error } = await createClient()
+    const { data: profiles, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('company_id', companyId)
@@ -71,7 +71,7 @@ export const profileService = {
   },
 
   async subscribeToChanges(userId: string, callback: (payload: any) => void) {
-    const subscription = createClient()
+    const subscription = supabase
       .channel('profiles_changes')
       .on(
         'postgres_changes',

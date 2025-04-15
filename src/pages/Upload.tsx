@@ -182,9 +182,9 @@ const UploadPage: React.FC = () => {
                   id="match-to-jd" 
                   checked={matchToJD} 
                   onCheckedChange={(checked) => setMatchToJD(checked as boolean)}
-                  className="mb-2"
+                  className=""
                 />
-                <Label htmlFor="match-to-jd" className="font-sans">
+                <Label htmlFor="match-to-jd" className="font-sans ml-2 -mt-1">
                   Match to Job Description (Optional)
                 </Label>
                 

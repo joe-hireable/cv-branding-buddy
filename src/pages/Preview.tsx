@@ -1,11 +1,12 @@
-import React, { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useCallback, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import Header from '@/components/Header';
 import CVSection from '@/components/CVSection';
 import CVPreview from '@/components/CVPreview';
 import ChatEditor from '@/components/ChatEditor';
 import { useCVContext } from '@/contexts/CVContext';
 import { useRecruiterContext } from '@/contexts/RecruiterContext';
+import { useSettingsContext } from '@/contexts/SettingsContext';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -35,8 +36,11 @@ import {
 } from '@/components/ui/brand-components';
 import { GradientSwitch } from '@/components/ui/gradient-form-components';
 import { Card } from '@/components/ui/card';
+import { supabase } from '@/integrations/supabase/client';
 
 const Preview = (): JSX.Element => {
+  const [searchParams] = useSearchParams();
+  const cvId = searchParams.get('id');
   const [isOptimisingProfileStatement, setIsOptimisingProfileStatement] = useState(false);
   const [isOptimisingSkills, setIsOptimisingSkills] = useState(false);
   const [isOptimisingAchievements, setIsOptimisingAchievements] = useState(false);
@@ -61,10 +65,70 @@ const Preview = (): JSX.Element => {
     setSectionVisibility,
     setSectionOrder,
     setIsAnonymised,
+    setCv,
   } = useCVContext();
   
   const { profile } = useRecruiterContext();
   const navigate = useNavigate();
+  const { settings } = useSettingsContext();
+
+  useEffect(() => {
+    const loadCV = async () => {
+      if (!cvId) return;
+      
+      try {
+        // Fetch the CV data
+        const { data: cv, error } = await supabase
+          .from('cvs')
+          .select('*')
+          .eq('id', cvId)
+          .single();
+
+        if (error) throw error;
+        if (!cv) throw new Error('CV not found');
+
+        // Parse the parsed_data from JSON string to object
+        const parsedData = typeof cv.parsed_data === 'string'
+          ? JSON.parse(cv.parsed_data)
+          : cv.parsed_data;
+
+        // Apply default settings from SettingsContext
+        if (settings) {
+          // Apply visibility settings
+          if (settings.defaultSectionVisibility) {
+            Object.entries(settings.defaultSectionVisibility).forEach(([section, isVisible]) => {
+              setSectionVisibility(section as any, isVisible);
+            });
+          }
+          
+          // Apply section order
+          if (settings.defaultSectionOrder && settings.defaultSectionOrder.sections) {
+            setSectionOrder(settings.defaultSectionOrder.sections);
+          }
+          
+          // Apply anonymisation setting
+          setIsAnonymised(settings.defaultAnonymise || false);
+        }
+
+        // Set the CV data in the context
+        if (parsedData) {
+          setCv({
+            ...parsedData,
+            id: cv.id
+          });
+        }
+      } catch (error) {
+        console.error('Error loading CV:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to load CV. Please try again.",
+        });
+      }
+    };
+
+    loadCV();
+  }, [cvId, settings, setCv, setSectionVisibility, setSectionOrder, setIsAnonymised]);
 
   const moveSection = useCallback((dragIndex: number, hoverIndex: number) => {
     // Get only non-personal info sections
@@ -112,12 +176,21 @@ const Preview = (): JSX.Element => {
       return;
     }
     
+    if (!cv.id) {
+      toast({
+        title: "Error",
+        description: "CV ID not found. Please save the CV first.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsOptimisingProfileStatement(true);
     
     try {
       console.debug('Optimising profile statement with:', cv.profileStatement);
       
-      const response = await optimiseProfileStatement(cv.profileStatement);
+      const response = await optimiseProfileStatement(cv.id, cv.jobDescription);
       
       if (response.status === 'success') {
         // Check if we have the optimised text
@@ -142,13 +215,15 @@ const Preview = (): JSX.Element => {
           title: "Profile Statement Optimised",
           description: "Your profile statement has been enhanced.",
         });
+      } else {
+        throw new Error(response.errors?.[0] || 'Failed to optimise profile statement');
       }
     } catch (error) {
       console.error('Error optimising profile statement:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to optimise profile statement. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to optimise profile statement. Please try again.",
       });
     } finally {
       setIsOptimisingProfileStatement(false);
@@ -156,11 +231,13 @@ const Preview = (): JSX.Element => {
   };
 
   const handleOptimiseSkills = async () => {
-    if (!cv?.skills?.length) {
+    if (!cv) return;
+    
+    if (!cv.id) {
       toast({
-        variant: "destructive",
         title: "Error",
-        description: "No skills found to optimise.",
+        description: "CV ID not found. Please save the CV first.",
+        variant: "destructive",
       });
       return;
     }
@@ -168,17 +245,15 @@ const Preview = (): JSX.Element => {
     setIsOptimisingSkills(true);
     
     try {
-      console.debug('Optimising skills:', cv.skills);
+      const response = await optimiseSkills(cv.id, cv.jobDescription);
       
-      const response = await optimiseSkills(cv.skills);
-      
-      if (response.status === 'success') {
+      if (response.status === 'success' && response.data) {
         setOptimisedContent(prev => ({
           ...prev,
           skills: {
             original: cv.skills,
             optimised: response.data.optimisedSkills,
-            feedback: formatFeedback(response.data?.feedback)
+            feedback: formatFeedback(response.data.feedback)
           }
         }));
         
@@ -188,11 +263,10 @@ const Preview = (): JSX.Element => {
         });
       }
     } catch (error) {
-      console.error('Error optimising skills:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to optimise skills. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to optimise skills. Please try again.",
       });
     } finally {
       setIsOptimisingSkills(false);
@@ -212,17 +286,24 @@ const Preview = (): JSX.Element => {
     setIsOptimisingAchievements(true);
     
     try {
-      console.debug('Optimising achievements:', cv.achievements);
+      if (!cv.id) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "CV ID not found. Please save the CV first.",
+        });
+        return;
+      }
       
-      const response = await optimiseAchievements(cv.achievements);
+      const response = await optimiseAchievements(cv.id, cv.jobDescription);
       
-      if (response.status === 'success') {
+      if (response.status === 'success' && response.data) {
         setOptimisedContent(prev => ({
           ...prev,
           achievements: {
             original: cv.achievements,
             optimised: response.data.optimisedAchievements,
-            feedback: formatFeedback(response.data?.feedback)
+            feedback: formatFeedback(response.data.feedback)
           }
         }));
         
@@ -232,11 +313,10 @@ const Preview = (): JSX.Element => {
         });
       }
     } catch (error) {
-      console.error('Error optimising achievements:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to optimise achievements. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to optimise achievements. Please try again.",
       });
     } finally {
       setIsOptimisingAchievements(false);
@@ -253,12 +333,19 @@ const Preview = (): JSX.Element => {
       return;
     }
     
+    if (!cv.id) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "CV ID not found. Please save the CV first.",
+      });
+      return;
+    }
+    
     setOptimisingExperienceIndex(index);
     
     try {
-      console.debug('Optimising experience:', cv.experience[index]);
-      
-      const response = await optimiseExperience(cv.experience[index]);
+      const response = await optimiseExperience(cv.id, cv.jobDescription);
       
       if (response.status === 'success') {
         setOptimisedContent(prev => ({
@@ -321,29 +408,29 @@ const Preview = (): JSX.Element => {
 
     switch (section) {
       case 'profileStatement':
-        if (optimizedContent.profileStatement) {
-          updateCvField('profileStatement', optimizedContent.profileStatement.optimized);
+        if (optimisedContent.profileStatement) {
+          updateCvField('profileStatement', optimisedContent.profileStatement.optimised);
           setOptimisedContent(prev => ({ ...prev, profileStatement: undefined }));
         }
         break;
       case 'skills':
-        if (optimizedContent.skills) {
-          updateCvField('skills', optimizedContent.skills.optimized);
+        if (optimisedContent.skills) {
+          updateCvField('skills', optimisedContent.skills.optimised);
           setOptimisedContent(prev => ({ ...prev, skills: undefined }));
         }
         break;
       case 'achievements':
-        if (optimizedContent.achievements) {
-          updateCvField('achievements', optimizedContent.achievements.optimized);
+        if (optimisedContent.achievements) {
+          updateCvField('achievements', optimisedContent.achievements.optimised);
           setOptimisedContent(prev => ({ ...prev, achievements: undefined }));
         }
         break;
       case 'experience':
-        if (index !== undefined && optimizedContent.experience?.[index]) {
+        if (index !== undefined && optimisedContent.experience?.[index]) {
           const updatedExperiences = [...cv.experience];
           updatedExperiences[index] = {
             ...updatedExperiences[index],
-            highlights: optimizedContent.experience[index].optimized.highlights,
+            highlights: optimisedContent.experience[index].optimised.highlights,
           };
           updateCvField('experience', updatedExperiences);
           setOptimisedContent(prev => ({
@@ -395,7 +482,7 @@ const Preview = (): JSX.Element => {
             {optimisedContent.profileStatement && (
               <div className="space-y-2">
                 <h4 className="font-medium text-foreground">Suggested Changes:</h4>
-                <p className="text-muted-foreground">{optimisedContent.profileStatement.optimized}</p>
+                <p className="text-muted-foreground">{optimisedContent.profileStatement.optimised}</p>
                 <p className="text-sm text-muted-foreground">{optimisedContent.profileStatement.feedback}</p>
                 <div className="flex space-x-2">
                   <GradientButton
@@ -433,7 +520,7 @@ const Preview = (): JSX.Element => {
               <div className="space-y-2">
                 <h4 className="font-medium text-foreground">Suggested Skills:</h4>
                 <div className="flex flex-wrap gap-1">
-                  {optimisedContent.skills.optimized.map((skill, idx) => (
+                  {optimisedContent.skills.optimised.map((skill, idx) => (
                     <GradientBadge key={idx}>
                       {skill.name}
                     </GradientBadge>
@@ -474,7 +561,7 @@ const Preview = (): JSX.Element => {
               <div className="space-y-2">
                 <h4 className="font-medium text-foreground">Suggested Achievements:</h4>
                 <ul className="list-disc pl-5 text-muted-foreground">
-                  {optimisedContent.achievements.optimized.map((achievement, idx) => (
+                  {optimisedContent.achievements.optimised.map((achievement, idx) => (
                     <li key={idx}>{achievement}</li>
                   ))}
                 </ul>
@@ -537,8 +624,8 @@ const Preview = (): JSX.Element => {
                   <div className="space-y-2">
                     <h4 className="font-medium text-foreground">Suggested Changes:</h4>
                     <ul className="list-disc pl-5 text-muted-foreground">
-                      {optimisedContent.experience[idx].optimized.highlights && 
-                        optimisedContent.experience[idx].optimized.highlights.map((highlight, hIdx) => (
+                      {optimisedContent.experience[idx].optimised.highlights && 
+                        optimisedContent.experience[idx].optimised.highlights.map((highlight, hIdx) => (
                           <li key={hIdx}>{highlight}</li>
                         ))}
                     </ul>
@@ -587,16 +674,16 @@ const Preview = (): JSX.Element => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
       <Header />
       
       <main className="flex-1 container mx-auto px-4 py-6">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h1 className="text-2xl font-bold">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
               <GradientText>CV Preview</GradientText>
             </h1>
-            <p className="text-muted-foreground text-sm">
+            <p className="text-gray-600 dark:text-gray-400 text-sm">
               Drag sections to reorder • Click section icons to edit or hide
             </p>
           </div>
@@ -608,7 +695,7 @@ const Preview = (): JSX.Element => {
                 checked={isAnonymised}
                 onCheckedChange={setIsAnonymised}
               />
-              <Label htmlFor="anonymise" className="text-foreground">Anonymise</Label>
+              <Label htmlFor="anonymise" className="text-gray-900 dark:text-gray-100">Anonymise</Label>
             </div>
             
             <Sheet>
@@ -617,10 +704,10 @@ const Preview = (): JSX.Element => {
                   <DownloadCloud className="h-4 w-4" /> Export
                 </GradientButton>
               </SheetTrigger>
-              <SheetContent>
+              <SheetContent className="bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-800">
                 <SheetHeader>
-                  <SheetTitle>Export CV</SheetTitle>
-                  <SheetDescription>
+                  <SheetTitle className="text-gray-900 dark:text-gray-100">Export CV</SheetTitle>
+                  <SheetDescription className="text-gray-600 dark:text-gray-400">
                     Choose a format to export the CV. The document will be generated with your agency branding.
                   </SheetDescription>
                 </SheetHeader>
@@ -640,7 +727,6 @@ const Preview = (): JSX.Element => {
                     className="w-full"
                     disabled={isExporting}
                   >
-                    <DownloadCloud className="mr-2 h-4 w-4" /> 
                     {isExporting ? 'Generating...' : 'Export as DOCX'}
                   </SecondaryGradientButton>
                 </div>
@@ -652,14 +738,14 @@ const Preview = (): JSX.Element => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left column - Sections to drag and arrange */}
           <div className="lg:col-span-1">
-            <Card className="p-4 mb-4 bg-card">
+            <Card className="p-4 mb-4 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="font-medium text-foreground">CV Sections</h2>
+                <h2 className="font-medium text-gray-900 dark:text-gray-100">CV Sections</h2>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setIsChatOpen(!isChatOpen)}
-                  className="text-foreground hover:text-primary"
+                  className="text-gray-900 dark:text-gray-100 hover:text-primary"
                 >
                   <MessageSquareText className="h-4 w-4 mr-1" />
                   Edit with Chat
@@ -744,7 +830,7 @@ const Preview = (): JSX.Element => {
           
           {/* Right column - CV Preview */}
           <div className="lg:col-span-2">
-            <Card className="p-6 bg-card">
+            <Card className="p-6 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
               <CVPreview 
                 cv={cv} 
                 isAnonymised={isAnonymised} 
@@ -756,12 +842,12 @@ const Preview = (): JSX.Element => {
         </div>
       </main>
       
-      <footer className="border-t border-border py-4">
-        <div className="container mx-auto px-4 text-sm text-muted-foreground flex justify-between">
+      <footer className="border-t border-gray-200 dark:border-gray-800 py-4">
+        <div className="container mx-auto px-4 text-sm text-gray-600 dark:text-gray-400 flex justify-between">
           <p>© 2023 Hireable. All rights reserved.</p>
           <div className="space-x-4">
-            <a href="#" className="hover:text-foreground transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-foreground transition-colors">Terms of Service</a>
+            <a href="#" className="hover:text-gray-900 dark:hover:text-gray-100 transition-colors">Privacy Policy</a>
+            <a href="#" className="hover:text-gray-900 dark:hover:text-gray-100 transition-colors">Terms of Service</a>
           </div>
         </div>
       </footer>

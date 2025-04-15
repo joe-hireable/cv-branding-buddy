@@ -1,4 +1,4 @@
-import { createClient } from '../client'
+import { supabase } from '../client'
 import type { Database } from '../types'
 
 type Company = Database['public']['Tables']['companies']['Row']
@@ -7,7 +7,7 @@ type CompanyUpdate = Database['public']['Tables']['companies']['Update']
 
 export const companyService = {
   async create(data: CompanyInsert) {
-    const { data: company, error } = await createClient()
+    const { data: company, error } = await supabase
       .from('companies')
       .insert(data)
       .select()
@@ -18,7 +18,7 @@ export const companyService = {
   },
 
   async getById(id: string) {
-    const { data: company, error } = await createClient()
+    const { data: company, error } = await supabase
       .from('companies')
       .select('*')
       .eq('id', id)
@@ -29,7 +29,7 @@ export const companyService = {
   },
 
   async update(id: string, data: CompanyUpdate) {
-    const { data: company, error } = await createClient()
+    const { data: company, error } = await supabase
       .from('companies')
       .update(data)
       .eq('id', id)
@@ -41,7 +41,7 @@ export const companyService = {
   },
 
   async delete(id: string) {
-    const { error } = await createClient()
+    const { error } = await supabase
       .from('companies')
       .delete()
       .eq('id', id)
@@ -50,7 +50,7 @@ export const companyService = {
   },
 
   async subscribeToChanges(companyId: string, callback: (payload: any) => void) {
-    const subscription = createClient()
+    const subscription = supabase
       .channel('companies_changes')
       .on(
         'postgres_changes',

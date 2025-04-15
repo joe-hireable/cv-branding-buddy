@@ -373,6 +373,52 @@ export type Database = {
         }
         Relationships: []
       }
+      settings: {
+        Row: {
+          id: string
+          user_id: string
+          default_section_visibility: Json
+          default_section_order: Json
+          default_anonymise: boolean
+          keep_original_files: boolean
+          default_export_format: string
+          theme: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          default_section_visibility?: Json
+          default_section_order?: Json
+          default_anonymise?: boolean
+          keep_original_files?: boolean
+          default_export_format?: string
+          theme?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          default_section_visibility?: Json
+          default_section_order?: Json
+          default_anonymise?: boolean
+          keep_original_files?: boolean
+          default_export_format?: string
+          theme?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "settings_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never

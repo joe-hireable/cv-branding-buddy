@@ -378,5 +378,39 @@ export const cvParserService = {
       }
       throw new Error('Failed to score CV');
     }
+  },
+
+  /**
+   * Generate a document (PDF or DOCX) from CV data
+   */
+  generateDocument: async (formData: FormData): Promise<BackendResponse> => {
+    try {
+      const response = await cvParserApi.post<BackendResponse>('/generate', formData);
+      
+      if (response.data.status === 'error') {
+        if (response.data.errors?.length > 0) {
+          throw new Error(response.data.errors[0]);
+        }
+        throw new Error('Server returned an error status without details');
+      }
+
+      return response.data;
+    } catch (error) {
+      const cvError = error as CVParserError;
+      console.error('Document generation error:', {
+        error: cvError,
+        message: cvError.message,
+        response: cvError.response?.data
+      });
+
+      if (cvError.response?.status === 500) {
+        throw new Error('Server error occurred while generating document. Please try again later.');
+      } else if (cvError.response?.data?.errors?.length > 0) {
+        throw new Error(cvError.response.data.errors[0]);
+      } else if (cvError.message) {
+        throw error;
+      }
+      throw new Error('Failed to generate document: Unknown error occurred');
+    }
   }
 }; 
