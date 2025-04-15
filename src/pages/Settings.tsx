@@ -18,6 +18,8 @@ import type { Identifier, XYCoord } from 'dnd-core';
 import { CustomButton } from '@/components/ui/custom-button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { cn } from '@/lib/utils';
+import { GradientButton, SecondaryGradientButton } from '@/components/ui/brand-components';
+import { GradientSwitch, GradientCheckbox, dragAndDropStyles } from '@/components/ui/gradient-form-components';
 
 interface DragItem {
   index: number;
@@ -113,15 +115,15 @@ const SectionItem = ({ id, text, index, isVisible, moveSection, toggleVisibility
     <div
       ref={ref}
       className={cn(
-        'flex items-center justify-between p-3 border rounded-md bg-white dark:bg-gray-800 dark:border-gray-700 mb-2',
-        isDragging && 'opacity-50 border-dashed border-2 border-gray-400 dark:border-gray-600 bg-gray-50 dark:bg-gray-900',
+        dragAndDropStyles.container,
+        isDragging && dragAndDropStyles.dragging,
         !isDraggable && 'cursor-default'
       )}
       data-handler-id={handlerId}
     >
       <div className="flex items-center">
         {isDraggable && (
-          <div className="cursor-move px-1 mr-2">
+          <div className={dragAndDropStyles.draggable}>
             <GripVertical className="h-5 w-5 text-gray-400 dark:text-gray-500" />
           </div>
         )}
@@ -144,7 +146,7 @@ const SectionItem = ({ id, text, index, isVisible, moveSection, toggleVisibility
           </button>
         </div>
         
-        <Switch
+        <GradientSwitch
           id={`section-${id}`}
           checked={isVisible}
           onCheckedChange={() => toggleVisibility(id)}
@@ -289,40 +291,72 @@ const Settings = () => {
             <div className="md:col-span-1">
               <div className="bg-white dark:bg-gray-800 rounded-md shadow-sm">
                 <div className="p-4 border-b dark:border-gray-700">
-                  <CustomButton
-                    variant="plain"
-                    className="w-full justify-start"
-                    onClick={() => setActiveTab('sections')}
-                  >
-                    CV Sections
-                  </CustomButton>
+                  {activeTab === 'sections' ? (
+                    <GradientButton
+                      className="w-full justify-start"
+                      onClick={() => setActiveTab('sections')}
+                    >
+                      CV Sections
+                    </GradientButton>
+                  ) : (
+                    <SecondaryGradientButton
+                      className="w-full justify-start"
+                      onClick={() => setActiveTab('sections')}
+                    >
+                      CV Sections
+                    </SecondaryGradientButton>
+                  )}
                 </div>
                 <div className="p-4 border-b dark:border-gray-700">
-                  <CustomButton
-                    variant="plain"
-                    className="w-full justify-start"
-                    onClick={() => setActiveTab('anonymisation')}
-                  >
-                    Anonymisation
-                  </CustomButton>
+                  {activeTab === 'anonymisation' ? (
+                    <GradientButton
+                      className="w-full justify-start"
+                      onClick={() => setActiveTab('anonymisation')}
+                    >
+                      Anonymisation
+                    </GradientButton>
+                  ) : (
+                    <SecondaryGradientButton
+                      className="w-full justify-start"
+                      onClick={() => setActiveTab('anonymisation')}
+                    >
+                      Anonymisation
+                    </SecondaryGradientButton>
+                  )}
                 </div>
                 <div className="p-4 border-b dark:border-gray-700">
-                  <CustomButton
-                    variant="plain"
-                    className="w-full justify-start"
-                    onClick={() => setActiveTab('export')}
-                  >
-                    Export Format
-                  </CustomButton>
+                  {activeTab === 'export' ? (
+                    <GradientButton
+                      className="w-full justify-start"
+                      onClick={() => setActiveTab('export')}
+                    >
+                      Export Format
+                    </GradientButton>
+                  ) : (
+                    <SecondaryGradientButton
+                      className="w-full justify-start"
+                      onClick={() => setActiveTab('export')}
+                    >
+                      Export Format
+                    </SecondaryGradientButton>
+                  )}
                 </div>
                 <div className="p-4">
-                  <CustomButton
-                    variant="plain"
-                    className="w-full justify-start"
-                    onClick={() => setActiveTab('appearance')}
-                  >
-                    Appearance
-                  </CustomButton>
+                  {activeTab === 'appearance' ? (
+                    <GradientButton
+                      className="w-full justify-start"
+                      onClick={() => setActiveTab('appearance')}
+                    >
+                      Appearance
+                    </GradientButton>
+                  ) : (
+                    <SecondaryGradientButton
+                      className="w-full justify-start"
+                      onClick={() => setActiveTab('appearance')}
+                    >
+                      Appearance
+                    </SecondaryGradientButton>
+                  )}
                 </div>
               </div>
             </div>
@@ -334,8 +368,7 @@ const Settings = () => {
                     <CardContent className="pt-6">
                       <div className="flex justify-between items-center mb-4 space-x-4">
                         <h2 className="text-xl font-semibold w-96 dark:text-white">CV Section Arrangement</h2>
-                        <CustomButton 
-                          variant="plain"
+                        <GradientButton 
                           onClick={saveSectionOrder}
                           disabled={isSaving}
                         >
@@ -347,7 +380,7 @@ const Settings = () => {
                           ) : (
                             'Save Order'
                           )}
-                        </CustomButton>
+                        </GradientButton>
                       </div>
                       
                       <div className="space-y-2">
@@ -367,9 +400,7 @@ const Settings = () => {
 
                       <br />
                       
-                      <CustomButton 
-                        variant="primary"
-                        className="mt-0" 
+                      <GradientButton 
                         onClick={handleSave}
                         disabled={isSaving}
                       >
@@ -381,7 +412,7 @@ const Settings = () => {
                         ) : (
                           'Save All Settings'
                         )}
-                      </CustomButton>
+                      </GradientButton>
                     </CardContent>
                   </Card>
                 </TabsContent>
@@ -399,7 +430,7 @@ const Settings = () => {
                               Automatically anonymise personal information in all uploaded CVs
                             </p>
                           </div>
-                          <Switch
+                          <GradientSwitch
                             id="auto-anonymise"
                             checked={settings.defaultAnonymise}
                             onCheckedChange={(checked) => updateSettings({ defaultAnonymise: checked })}
@@ -413,7 +444,7 @@ const Settings = () => {
                               Store original CV files alongside anonymised versions
                             </p>
                           </div>
-                          <Switch
+                          <GradientSwitch
                             id="keep-original"
                             checked={settings.keepOriginalFiles}
                             onCheckedChange={(checked) => updateSettings({ keepOriginalFiles: checked })}
@@ -422,8 +453,7 @@ const Settings = () => {
                       </div>
                       
                       <br />
-                      <CustomButton 
-                        variant="primary"
+                      <GradientButton 
                         onClick={handleSave}
                         disabled={isSaving}
                       >
@@ -435,7 +465,7 @@ const Settings = () => {
                         ) : (
                           'Save All Settings'
                         )}
-                      </CustomButton>
+                      </GradientButton>
                     </CardContent>
                   </Card>
                 </TabsContent>
@@ -447,7 +477,7 @@ const Settings = () => {
                       
                       <div className="flex items-center space-x-4">
                         <div className="flex items-center space-x-2">
-                          <Checkbox
+                          <GradientCheckbox
                             id="pdf-format"
                             checked={settings.defaultExportFormat === 'PDF'}
                             onCheckedChange={() => handleExportFormatChange('PDF')}
@@ -456,7 +486,7 @@ const Settings = () => {
                         </div>
                         
                         <div className="flex items-center space-x-2">
-                          <Checkbox
+                          <GradientCheckbox
                             id="docx-format"
                             checked={settings.defaultExportFormat === 'DOCX'}
                             onCheckedChange={() => handleExportFormatChange('DOCX')}
@@ -471,8 +501,7 @@ const Settings = () => {
                       
                       <br />
 
-                      <CustomButton 
-                        variant="primary"
+                      <GradientButton 
                         onClick={handleSave}
                         disabled={isSaving}
                       >
@@ -484,7 +513,7 @@ const Settings = () => {
                         ) : (
                           'Save All Settings'
                         )}
-                      </CustomButton>
+                      </GradientButton>
                     </CardContent>
                   </Card>
                 </TabsContent>
@@ -532,8 +561,7 @@ const Settings = () => {
                       
                       <br />
                       
-                      <CustomButton 
-                        variant="primary"
+                      <GradientButton 
                         onClick={handleSave}
                         disabled={isSaving}
                       >
@@ -545,7 +573,7 @@ const Settings = () => {
                         ) : (
                           'Save All Settings'
                         )}
-                      </CustomButton>
+                      </GradientButton>
                     </CardContent>
                   </Card>
                 </TabsContent>

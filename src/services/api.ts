@@ -1,5 +1,82 @@
-import { CV, BackendResponse, RecruiterProfile, AppSettings } from '@/types/cv';
+/**
+ * @file API Service
+ * @description Base API service with error handling and type safety
+ */
+
+import { createClient } from '@supabase/supabase-js';
+import { Database } from '@/types/supabase';
+import { CV, BackendResponse, RecruiterProfile, AppSettings, Experience, Skill } from '@/types/cv';
 import { cvParserService } from './cvParserApi';
+
+/**
+ * API error class for handling API-specific errors
+ * @class APIError
+ * @extends {Error}
+ */
+export class APIError extends Error {
+  constructor(
+    message: string,
+    public statusCode: number,
+    public code: string
+  ) {
+    super(message);
+    this.name = 'APIError';
+  }
+}
+
+/**
+ * Base API service class
+ * @class APIService
+ */
+export class APIService {
+  protected supabase;
+
+  constructor() {
+    this.supabase = createClient<Database>(
+      import.meta.env.VITE_SUPABASE_URL,
+      import.meta.env.VITE_SUPABASE_ANON_KEY
+    );
+  }
+
+  /**
+   * Handles API errors in a consistent way
+   * @param {unknown} error - The error to handle
+   * @returns {never} Never returns, always throws an APIError
+   */
+  protected handleError(error: unknown): never {
+    if (error instanceof APIError) {
+      throw error;
+    }
+
+    if (error instanceof Error) {
+      throw new APIError(
+        error.message,
+        500,
+        'INTERNAL_SERVER_ERROR'
+      );
+    }
+
+    throw new APIError(
+      'An unexpected error occurred',
+      500,
+      'UNKNOWN_ERROR'
+    );
+  }
+
+  /**
+   * Makes a type-safe API request
+   * @template T - The expected response type
+   * @param {Promise<T>} request - The API request to make
+   * @returns {Promise<T>} The API response
+   */
+  protected async makeRequest<T>(request: Promise<T>): Promise<T> {
+    try {
+      return await request;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+}
 
 // This is a mock implementation since we don't have the actual backend yet
 // In a real implementation, these would make API calls to the backend services
@@ -26,33 +103,33 @@ export async function uploadJobDescription(file: File): Promise<BackendResponse>
   });
 }
 
-export async function optimizeProfileStatement(
+export async function optimiseProfileStatement(
   cv: File | string,
   jobDescription?: string
 ): Promise<BackendResponse> {
-  return cvParserService.optimizeProfileStatement(cv, jobDescription);
+  return cvParserService.optimiseProfileStatement(cv, jobDescription);
 }
 
-export async function optimizeSkills(
+export async function optimiseSkills(
   cv: File | string,
   jobDescription?: string
 ): Promise<BackendResponse> {
-  return cvParserService.optimizeSkills(cv, jobDescription);
+  return cvParserService.optimiseSkills(cv, jobDescription);
 }
 
-export async function optimizeAchievements(
+export async function optimiseAchievements(
   cv: File | string,
   jobDescription?: string
 ): Promise<BackendResponse> {
-  return cvParserService.optimizeAchievements(cv, jobDescription);
+  return cvParserService.optimiseAchievements(cv, jobDescription);
 }
 
-export async function optimizeExperience(
+export async function optimiseExperience(
   cv: File | string,
   experienceIndex: number,
   jobDescription?: string
 ): Promise<BackendResponse> {
-  return cvParserService.optimizeExperience(cv, experienceIndex, jobDescription);
+  return cvParserService.optimiseExperience(cv, experienceIndex, jobDescription);
 }
 
 export async function generateDocument(cv: CV, format: 'PDF' | 'DOCX', recruiterProfile: RecruiterProfile): Promise<string> {

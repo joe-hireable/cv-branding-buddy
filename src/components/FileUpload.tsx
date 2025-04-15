@@ -10,6 +10,7 @@ interface FileUploadProps {
   accept?: string;
   maxSize?: number; // in MB
   isLoading?: boolean;
+  icon?: React.ReactNode;
 }
 
 const FileUpload: React.FC<FileUploadProps> = ({
@@ -18,6 +19,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
   accept = '.pdf,.doc,.docx',
   maxSize = 10, // Default 10MB
   isLoading = false,
+  icon,
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [file, setFile] = useState<File | null>(null);

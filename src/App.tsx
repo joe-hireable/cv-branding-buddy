@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -19,6 +18,7 @@ import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import History from "./pages/History";
 import NotFound from "./pages/NotFound";
+import BrandingDemo from "./pages/BrandingDemo";
 
 // Auth pages
 import AuthLayout from "./pages/Auth";
@@ -40,45 +40,52 @@ const App = () => (
                 <Toaster />
                 <Sonner />
                 <BrowserRouter>
-                  <Routes>
-                    {/* Auth routes */}
-                    <Route path="/auth" element={<AuthLayout />}>
-                      <Route path="login" element={<Login />} />
-                      <Route path="email" element={<EmailLogin />} />
-                      <Route path="signup" element={<SignUp />} />
-                      <Route path="forgot-password" element={<ForgotPassword />} />
-                    </Route>
-                    
-                    {/* Protected routes */}
-                    <Route path="/" element={
-                      <ProtectedRoute>
-                        <UploadPage />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/preview" element={
-                      <ProtectedRoute>
-                        <Preview />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/profile" element={
-                      <ProtectedRoute>
-                        <Profile />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/settings" element={
-                      <ProtectedRoute>
-                        <Settings />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/history" element={
-                      <ProtectedRoute>
-                        <History />
-                      </ProtectedRoute>
-                    } />
-                    
-                    {/* Fallback route */}
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
+                  <div className="min-h-screen bg-background text-foreground font-sans">
+                    <Routes>
+                      {/* Auth routes */}
+                      <Route path="/auth" element={<AuthLayout />}>
+                        <Route path="login" element={<Login />} />
+                        <Route path="email" element={<EmailLogin />} />
+                        <Route path="signup" element={<SignUp />} />
+                        <Route path="forgot-password" element={<ForgotPassword />} />
+                      </Route>
+                      
+                      {/* Protected routes */}
+                      <Route path="/" element={
+                        <ProtectedRoute>
+                          <UploadPage />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/preview" element={
+                        <ProtectedRoute>
+                          <Preview />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/profile" element={
+                        <ProtectedRoute>
+                          <Profile />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/settings" element={
+                        <ProtectedRoute>
+                          <Settings />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/history" element={
+                        <ProtectedRoute>
+                          <History />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/branding-demo" element={
+                        <ProtectedRoute>
+                          <BrandingDemo />
+                        </ProtectedRoute>
+                      } />
+                      
+                      {/* Fallback route */}
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </div>
                 </BrowserRouter>
               </DndProvider>
             </TooltipProvider>

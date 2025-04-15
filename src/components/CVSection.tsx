@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Eye, EyeOff, Edit, GripVertical } from 'lucide-react';
+import { Eye, EyeOff, Edit, GripVertical, Sparkles, Loader2 } from 'lucide-react';
 import { useDrag, useDrop, useDragDropManager } from 'react-dnd';
 import { cn } from '@/lib/utils';
+import { GradientButton } from '@/components/ui/brand-components';
 
 interface CVSectionProps {
   id: string;
@@ -121,7 +122,7 @@ const CVSection: React.FC<CVSectionProps> = ({
     <div
       ref={ref}
       className={cn(
-        'mb-4 border rounded-md transition-all duration-200',
+        'mb-4 border rounded-md transition-all duration-200 bg-card',
         isVisible ? '' : 'opacity-50',
         isDragging ? 'opacity-100 border-none bg-gradient-to-r from-[#F600FE] via-[#A136FF] to-[#0033D9] text-white shadow-lg' : '',
         isDraggingAny ? 'cursor-grabbing' : ''
@@ -130,32 +131,41 @@ const CVSection: React.FC<CVSectionProps> = ({
       onMouseLeave={() => setIsHovered(false)}
       data-handler-id={handlerId}
     >
-      <div className="flex items-center p-4">
+      <div className="flex items-center p-4 border-b border-border">
         {isDraggable && (
           <div className={`px-1 mr-2 ${isDraggingAny ? 'cursor-grabbing' : 'cursor-grab'}`}>
-            <GripVertical className={cn("h-5 w-5", isDragging ? "text-white" : "text-gray-400")} />
+            <GripVertical className={cn("h-5 w-5", isDragging ? "text-white" : "text-muted-foreground")} />
           </div>
         )}
         <h3 className={cn("text-sm font-medium flex-1", isDragging && "text-white")}>{title}</h3>
         <div className="flex space-x-2">
           {onOptimize && !isDraggingAny && !isDragging && (
-            <Button
-              variant="outline"
+            <GradientButton
               size="sm"
               className="text-xs"
               onClick={onOptimize}
               disabled={isOptimizing}
               data-testid="optimize-button"
             >
-              {isOptimizing ? 'Optimizing...' : 'Optimize with AI'}
-            </Button>
+              {isOptimizing ? (
+                <>
+                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                  Optimising...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-3 w-3 mr-1" />
+                  Optimise
+                </>
+              )}
+            </GradientButton>
           )}
           {onEdit && !isDraggingAny && !isDragging && (
             <Button
               variant="ghost"
               size="sm"
               onClick={onEdit}
-              className="text-gray-500 hover:text-gray-700"
+              className="text-muted-foreground hover:text-foreground"
             >
               <Edit className="h-4 w-4" />
             </Button>
@@ -165,7 +175,7 @@ const CVSection: React.FC<CVSectionProps> = ({
               variant="ghost"
               size="sm"
               onClick={onVisibilityToggle}
-              className="text-gray-500 hover:text-gray-700"
+              className="text-muted-foreground hover:text-foreground"
             >
               {isVisible ? (
                 <Eye className="h-4 w-4" />

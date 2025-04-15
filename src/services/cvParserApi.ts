@@ -1,6 +1,17 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { supabase, PARSE_CV_ENDPOINT } from '@/integrations/supabase/supabaseClient';
 import type { BackendResponse } from '@/types/cv';
+
+interface CVParserError {
+  response?: {
+    data?: {
+      errors?: string[];
+      status?: string;
+    };
+    status?: number;
+  };
+  message?: string;
+}
 
 // Create axios instance for CV Parser API
 export const cvParserApi = axios.create({
@@ -49,10 +60,7 @@ export const cvParserService = {
   /**
    * Parse a CV file and optionally match it against a job description
    */
-  async parseCV(
-    cvFile: File,
-    jobDescription?: string | File
-  ): Promise<BackendResponse> {
+  parseCV: async (cvFile: File, jobDescription?: string | File): Promise<BackendResponse> => {
     try {
       const formData = new FormData();
       formData.append('cv_file', cvFile);
@@ -74,12 +82,13 @@ export const cvParserService = {
       }
       
       return response.data;
-    } catch (error: any) {
-      console.error('CV parsing error:', error);
-      if (error.response?.data?.errors?.length > 0) {
-        throw new Error(error.response.data.errors[0]);
+    } catch (error) {
+      const cvError = error as CVParserError;
+      console.error('CV parsing error:', cvError);
+      if (cvError.response?.data?.errors?.length > 0) {
+        throw new Error(cvError.response.data.errors[0]);
       }
-      if (error.message) {
+      if (cvError.message) {
         throw error;
       }
       throw new Error('Failed to parse CV');
@@ -89,10 +98,7 @@ export const cvParserService = {
   /**
    * Optimise personal statement/profile
    */
-  async optimizeProfileStatement(
-    cv: File | string,
-    jobDescription?: string
-  ): Promise<BackendResponse> {
+  optimiseProfileStatement: async (cv: string | File, jobDescription?: string): Promise<BackendResponse> => {
     try {
       const formData = new FormData();
       formData.append('task', 'ps');
@@ -140,19 +146,20 @@ export const cvParserService = {
       }
 
       return response.data;
-    } catch (error: any) {
+    } catch (error) {
+      const cvError = error as CVParserError;
       console.error('Profile statement optimisation error:', {
-        error,
-        message: error.message,
-        response: error.response?.data
+        error: cvError,
+        message: cvError.message,
+        response: cvError.response?.data
       });
 
       // Enhance error message with more details
-      if (error.response?.status === 500) {
+      if (cvError.response?.status === 500) {
         throw new Error('Server error occurred while optimising profile statement. Please try again later.');
-      } else if (error.response?.data?.errors?.length > 0) {
-        throw new Error(error.response.data.errors[0]);
-      } else if (error.message) {
+      } else if (cvError.response?.data?.errors?.length > 0) {
+        throw new Error(cvError.response.data.errors[0]);
+      } else if (cvError.message) {
         throw error;
       }
       throw new Error('Failed to optimise profile statement: Unknown error occurred');
@@ -162,10 +169,7 @@ export const cvParserService = {
   /**
    * Optimise core skills section
    */
-  async optimizeSkills(
-    cv: File | string,
-    jobDescription?: string
-  ): Promise<BackendResponse> {
+  optimiseSkills: async (cv: string | File, jobDescription?: string): Promise<BackendResponse> => {
     try {
       const formData = new FormData();
       formData.append('task', 'cs');
@@ -211,41 +215,20 @@ export const cvParserService = {
         throw new Error('Server returned an error status without details');
       }
 
-      // Check if we have the expected data structure
-      if (!response.data.data) {
-        throw new Error('Invalid response format: missing data object in response');
-      }
-      
-      // If optimisedSkills is missing, try to extract it from the response
-      if (!response.data.data.optimizedSkills) {
-        console.warn('Response missing optimisedSkills field:', response.data);
-        
-        // Try to find the optimised skills in the response
-        if (response.data.data.skills) {
-          response.data.data.optimizedSkills = response.data.data.skills;
-        } else if (response.data.data.optimized) {
-          // If we have an optimised field, use that
-          response.data.data.optimizedSkills = response.data.data.optimized;
-        } else {
-          throw new Error('Invalid response format: missing optimisedSkills in response data');
-        }
-      }
-
       return response.data;
-    } catch (error: any) {
+    } catch (error) {
+      const cvError = error as CVParserError;
       console.error('Skills optimisation error:', {
-        error,
-        response: error.response?.data,
-        status: error.response?.status,
-        message: error.message
+        error: cvError,
+        message: cvError.message,
+        response: cvError.response?.data
       });
 
-      // Enhance error message with more details
-      if (error.response?.status === 500) {
+      if (cvError.response?.status === 500) {
         throw new Error('Server error occurred while optimising skills. Please try again later.');
-      } else if (error.response?.data?.errors?.length > 0) {
-        throw new Error(error.response.data.errors[0]);
-      } else if (error.message) {
+      } else if (cvError.response?.data?.errors?.length > 0) {
+        throw new Error(cvError.response.data.errors[0]);
+      } else if (cvError.message) {
         throw error;
       }
       throw new Error('Failed to optimise skills: Unknown error occurred');
@@ -255,13 +238,10 @@ export const cvParserService = {
   /**
    * Optimise key achievements
    */
-  async optimizeAchievements(
-    cv: File | string,
-    jobDescription?: string
-  ): Promise<BackendResponse> {
+  optimiseAchievements: async (cv: string | File, jobDescription?: string): Promise<BackendResponse> => {
     try {
       const formData = new FormData();
-      formData.append('task', 'ka');
+      formData.append('task', 'achievements');
       
       // Handle CV input - either as File or ID
       if (cv instanceof File) {
@@ -278,9 +258,6 @@ export const cvParserService = {
 
       const response = await cvParserApi.post<BackendResponse>('', formData);
       
-      // Log the response for debugging
-      console.debug('Achievements optimisation response:', response.data);
-      
       // Validate response structure
       if (!response.data) {
         throw new Error('Empty response received from server');
@@ -293,46 +270,20 @@ export const cvParserService = {
         throw new Error('Server returned an error status without details');
       }
 
-      // Ensure we have a data object
-      if (!response.data.data) {
-        response.data.data = {};
-      }
-
-      // If optimisedAchievements is missing, use the achievements array from the response
-      if (!response.data.data.optimizedAchievements) {
-        if (response.data.data.achievements) {
-          response.data.data.optimizedAchievements = response.data.data.achievements;
-        } else if (response.data.data.keyAchievements) {
-          response.data.data.optimizedAchievements = response.data.data.keyAchievements;
-        } else if (response.data.data.accomplishments) {
-          response.data.data.optimizedAchievements = response.data.data.accomplishments;
-        } else if (response.data.data.highlights) {
-          response.data.data.optimizedAchievements = response.data.data.highlights;
-        } else {
-          // If no achievements array is found, initialise an empty array
-          response.data.data.optimizedAchievements = [];
-        }
-      }
-
-      // Ensure each achievement is a string
-      response.data.data.optimizedAchievements = response.data.data.optimizedAchievements.map(
-        (achievement: any) => typeof achievement === 'string' ? achievement : achievement.text || achievement.description || achievement.toString()
-      );
-
       return response.data;
-    } catch (error: any) {
+    } catch (error) {
+      const cvError = error as CVParserError;
       console.error('Achievements optimisation error:', {
-        error,
-        response: error.response?.data,
-        status: error.response?.status,
-        message: error.message
+        error: cvError,
+        message: cvError.message,
+        response: cvError.response?.data
       });
 
-      if (error.response?.status === 500) {
+      if (cvError.response?.status === 500) {
         throw new Error('Server error occurred while optimising achievements. Please try again later.');
-      } else if (error.response?.data?.errors?.length > 0) {
-        throw new Error(error.response.data.errors[0]);
-      } else if (error.message) {
+      } else if (cvError.response?.data?.errors?.length > 0) {
+        throw new Error(cvError.response.data.errors[0]);
+      } else if (cvError.message) {
         throw error;
       }
       throw new Error('Failed to optimise achievements: Unknown error occurred');
@@ -342,14 +293,10 @@ export const cvParserService = {
   /**
    * Optimise role descriptions
    */
-  async optimizeExperience(
-    cv: File | string,
-    experienceIndex: number,
-    jobDescription?: string
-  ): Promise<BackendResponse> {
+  optimiseExperience: async (cv: string | File, jobDescription?: string): Promise<BackendResponse> => {
     try {
       const formData = new FormData();
-      formData.append('task', 'role');
+      formData.append('task', 'experience');
       
       // Handle CV input - either as File or ID
       if (cv instanceof File) {
@@ -360,16 +307,11 @@ export const cvParserService = {
         throw new Error('Invalid CV input: must be either a File or string ID');
       }
       
-      formData.append('experience_index', experienceIndex.toString());
-      
       if (jobDescription) {
         formData.append('jd', jobDescription);
       }
 
       const response = await cvParserApi.post<BackendResponse>('', formData);
-      
-      // Log the response for debugging
-      console.debug('Experience optimisation response:', response.data);
       
       // Validate response structure
       if (!response.data) {
@@ -383,43 +325,20 @@ export const cvParserService = {
         throw new Error('Server returned an error status without details');
       }
 
-      // Ensure we have a data object
-      if (!response.data.data) {
-        response.data.data = {};
-      }
-
-      // If optimisedExperience is missing, construct it from the response data
-      if (!response.data.data.optimisedExperience) {
-        const data = response.data.data;
-        
-        // Create an optimisedExperience object from the response data
-        response.data.data.optimisedExperience = {
-          highlights: Array.isArray(data.highlights) ? data.highlights :
-                     Array.isArray(data.bulletPoints) ? data.bulletPoints :
-                     Array.isArray(data.points) ? data.points : [],
-          summary: data.summary || data.description || data.text || '',
-          company: data.company || data.employer || data.organisation || '',
-          title: data.title || data.role || data.position || '',
-          start: data.start || data.startDate || '',
-          end: data.end || data.endDate || '',
-          current: data.current || data.isCurrent || false
-        };
-      }
-
       return response.data;
-    } catch (error: any) {
+    } catch (error) {
+      const cvError = error as CVParserError;
       console.error('Experience optimisation error:', {
-        error,
-        response: error.response?.data,
-        status: error.response?.status,
-        message: error.message
+        error: cvError,
+        message: cvError.message,
+        response: cvError.response?.data
       });
 
-      if (error.response?.status === 500) {
+      if (cvError.response?.status === 500) {
         throw new Error('Server error occurred while optimising experience. Please try again later.');
-      } else if (error.response?.data?.errors?.length > 0) {
-        throw new Error(error.response.data.errors[0]);
-      } else if (error.message) {
+      } else if (cvError.response?.data?.errors?.length > 0) {
+        throw new Error(cvError.response.data.errors[0]);
+      } else if (cvError.message) {
         throw error;
       }
       throw new Error('Failed to optimise experience: Unknown error occurred');
@@ -429,13 +348,10 @@ export const cvParserService = {
   /**
    * Score CV against job description
    */
-  async scoreCV(
-    cvId: string,
-    jobDescription: string | File
-  ): Promise<BackendResponse> {
+  scoreCV: async (cvId: string, jobDescription: string | File): Promise<BackendResponse> => {
     try {
       const formData = new FormData();
-      formData.append('task', 'scoring');
+      formData.append('task', 'score');
       formData.append('cv_id', cvId);
       
       if (jobDescription instanceof File) {
@@ -445,10 +361,22 @@ export const cvParserService = {
       }
 
       const response = await cvParserApi.post<BackendResponse>('', formData);
+      
+      if (response.data.status === 'error' && response.data.errors?.length > 0) {
+        throw new Error(response.data.errors[0]);
+      }
+      
       return response.data;
     } catch (error) {
-      console.error('CV scoring error:', error);
-      throw error;
+      const cvError = error as CVParserError;
+      console.error('CV scoring error:', cvError);
+      if (cvError.response?.data?.errors?.length > 0) {
+        throw new Error(cvError.response.data.errors[0]);
+      }
+      if (cvError.message) {
+        throw error;
+      }
+      throw new Error('Failed to score CV');
     }
   }
 }; 

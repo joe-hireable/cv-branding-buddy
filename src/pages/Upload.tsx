@@ -18,6 +18,7 @@ import { candidateService } from '@/integrations/supabase/services/candidates';
 import { storageService } from '@/integrations/supabase/services/storage';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { GradientText, GradientButton, SecondaryGradientButton, GradientCard } from '@/components/ui/brand-components';
 
 const UploadPage: React.FC = () => {
   const [cvFile, setCvFile] = useState<File | null>(null);
@@ -136,9 +137,10 @@ const UploadPage: React.FC = () => {
         throw new Error(response.errors?.[0] || 'Failed to process CV');
       }
     } catch (error) {
+      console.error('Error processing CV:', error);
       toast({
-        title: "Upload failed",
-        description: error instanceof Error ? error.message : "An unknown error occurred",
+        title: "Error processing CV",
+        description: "There was an error processing your CV. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -153,105 +155,121 @@ const UploadPage: React.FC = () => {
       
       <main className="flex-1 container mx-auto px-4 py-8">
         <div className="max-w-3xl mx-auto">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1 text-center">Upload CV</h1>
-          <p className="text-gray-600 dark:text-gray-400 mb-8 text-center">
-            Upload your CV and optionally include a job description to optimise your CV for specific roles
+          <h1 className="text-3xl font-bold mb-2 font-heading">
+            <GradientText>Upload Your CV</GradientText>
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-8 font-sans">
+            Upload your CV to get started with CV Branding Buddy. We'll analyze it and provide suggestions for improvement.
           </p>
           
-          <div className="mb-8">
-            <h2 className="text-lg font-medium text-gray-800 mb-3 dark:text-white">CV File</h2>
-            <FileUpload 
-              onFileSelected={handleCvUpload} 
-              isLoading={isLoading} 
-              label="Upload CV"
-              accept=".pdf,.doc,.docx"
-            />
-          </div>
-          
-          <div className="mb-8">
-            <div className="flex items-center space-x-2 mb-4">
-              <Checkbox 
-                id="matchToJD" 
-                checked={matchToJD}
-                onCheckedChange={(checked) => setMatchToJD(checked === true)}
+          <GradientCard className="mb-8">
+            <CardHeader>
+              <CardTitle className="font-heading">CV Upload</CardTitle>
+              <CardDescription className="font-sans">
+                Upload your CV in PDF, DOCX, or TXT format
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <FileUpload 
+                onFileSelected={handleCvUpload} 
+                accept=".pdf,.docx,.txt"
+                label="Upload your CV"
+                icon={<FileText className="w-6 h-6" />}
               />
-              <label
-                htmlFor="matchToJD"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                Match to Job Description?
-              </label>
-            </div>
-            
-            {matchToJD && (
-              <div>
-                <h2 className="text-lg font-medium text-gray-800 mb-3">Job Description (Optional)</h2>
-                <p className="text-sm text-gray-500 mb-3">
-                  Upload a job description to optimise your CV for specific roles
-                </p>
-                <FileUpload 
-                  onFileSelected={handleJdUpload} 
-                  isLoading={isLoading} 
-                  label="Upload Job Description"
-                  accept=".pdf,.doc,.docx,.txt"
+              
+              <div className="mt-6">
+                <Checkbox 
+                  id="match-to-jd" 
+                  checked={matchToJD} 
+                  onCheckedChange={(checked) => setMatchToJD(checked as boolean)}
+                  className="mb-2"
                 />
+                <Label htmlFor="match-to-jd" className="font-sans">
+                  Match to Job Description (Optional)
+                </Label>
+                
+                {matchToJD && (
+                  <div className="mt-4">
+                    <FileUpload 
+                      onFileSelected={handleJdUpload} 
+                      accept=".pdf,.docx,.txt"
+                      label="Upload Job Description"
+                      icon={<FileText className="w-6 h-6" />}
+                    />
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+              
+              <div className="mt-6">
+                <GradientButton 
+                  onClick={handleSubmit} 
+                  disabled={!cvFile || isLoading}
+                  className="w-full"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <UploadIcon className="mr-2 h-4 w-4" />
+                      Upload and Process
+                    </>
+                  )}
+                </GradientButton>
+              </div>
+            </CardContent>
+          </GradientCard>
           
-          <Button
-            type="submit"
-            className="w-full py-6 text-lg bg-hireable-gradient hover:opacity-90"
-            disabled={!cvFile || isLoading}
-            onClick={handleSubmit}
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                Uploading...
-              </>
-            ) : (
-              <>
-                <UploadIcon className="mr-2 h-5 w-5 text-white" />
-                Upload CV
-              </>
-            )}
-          </Button>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-10">
-            <Card className="dark:bg-gray-800 dark:border-gray-700">
-              <CardContent className="pt-6">
-                <div className="flex flex-col items-center text-center">
-                  <GradientIcon icon={UserCheck} size={24} />
-                  <h3 className="font-medium mb-2 mt-3 dark:text-white">Auto Anonymisation</h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Automatically anonymises personal information for unbiased recruitment
-                  </p>
-                </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="font-heading">AI-Powered Analysis</CardTitle>
+                <CardDescription className="font-sans">
+                  Our AI analyzes your CV and provides personalized suggestions
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 font-sans">
+                  <li className="flex items-center">
+                    <UserCheck className="h-5 w-5 text-green-500 mr-2" />
+                    <span>Content analysis</span>
+                  </li>
+                  <li className="flex items-center">
+                    <UserCheck className="h-5 w-5 text-green-500 mr-2" />
+                    <span>Keyword optimization</span>
+                  </li>
+                  <li className="flex items-center">
+                    <UserCheck className="h-5 w-5 text-green-500 mr-2" />
+                    <span>Formatting suggestions</span>
+                  </li>
+                </ul>
               </CardContent>
             </Card>
             
-            <Card className="dark:bg-gray-800 dark:border-gray-700">
-              <CardContent className="pt-6">
-                <div className="flex flex-col items-center text-center">
-                  <GradientIcon icon={FileText} size={24} />
-                  <h3 className="font-medium mb-2 mt-3 dark:text-white">Smart Formatting</h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Consistently formats CVs to your agency's template
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="dark:bg-gray-800 dark:border-gray-700">
-              <CardContent className="pt-6">
-                <div className="flex flex-col items-center text-center">
-                  <GradientIcon icon={UploadIcon} size={24} />
-                  <h3 className="font-medium mb-2 mt-3 dark:text-white">Instant Processing</h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Process multiple CVs in seconds, not hours
-                  </p>
-                </div>
+            <Card>
+              <CardHeader>
+                <CardTitle className="font-heading">Branding Enhancement</CardTitle>
+                <CardDescription className="font-sans">
+                  Enhance your CV with professional branding elements
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 font-sans">
+                  <li className="flex items-center">
+                    <UserCheck className="h-5 w-5 text-green-500 mr-2" />
+                    <span>Professional styling</span>
+                  </li>
+                  <li className="flex items-center">
+                    <UserCheck className="h-5 w-5 text-green-500 mr-2" />
+                    <span>Color schemes</span>
+                  </li>
+                  <li className="flex items-center">
+                    <UserCheck className="h-5 w-5 text-green-500 mr-2" />
+                    <span>Layout optimization</span>
+                  </li>
+                </ul>
               </CardContent>
             </Card>
           </div>

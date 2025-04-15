@@ -18,6 +18,10 @@ export default {
 			}
 		},
 		extend: {
+			fontFamily: {
+				heading: ['"Funnel Display"', 'sans-serif'],
+				sans: ['Inter', 'sans-serif'],
+			},
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
@@ -62,17 +66,17 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				hireable: {
-					primary: '#9333ea', // Purple
-					secondary: '#f472b6', // Pink
-					light: '#c084fc', // Light purple
-					dark: '#6b21a8', // Dark purple
+				brand: {
+					start: 'var(--gradient-start)',
+					middle: 'var(--gradient-middle)',
+					end: 'var(--gradient-end)',
 				}
 			},
 			backgroundImage: {
-				'hireable-gradient': 'linear-gradient(to right, #f472b6, #9333ea)',
+				'brand-gradient': 'linear-gradient(var(--gradient-angle), var(--gradient-start), var(--gradient-middle), var(--gradient-end))',
+				'brand-gradient-horizontal': 'linear-gradient(to right, var(--gradient-start), var(--gradient-middle), var(--gradient-end))',
+				'brand-gradient-hover': 'linear-gradient(calc(var(--gradient-angle) + 45deg), var(--gradient-start), var(--gradient-middle), var(--gradient-end))',
 				'noise': 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.65\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\' opacity=\'0.15\'/%3E%3C/svg%3E")',
-				'button-gradient': 'radial-gradient(128.69% 203.89% at 21.33% 16.1%, #F600FE 0%, #C900FE 25%, #A136FF 50%, #5142F0 75%, #0033D9 93.9%)',
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -114,12 +118,15 @@ export default {
 						opacity: '0.85',
 					}
 				},
-				'subtle-shift': {
-					'0%, 100%': {
-						backgroundPosition: '0% 0%',
+				'gradient-shift': {
+					'0%': {
+						backgroundPosition: '0% 50%',
 					},
 					'50%': {
-						backgroundPosition: '100% 10%',
+						backgroundPosition: '100% 50%',
+					},
+					'100%': {
+						backgroundPosition: '0% 50%',
 					}
 				}
 			},
@@ -128,9 +135,34 @@ export default {
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'fade-in': 'fade-in 0.3s ease-out',
 				'subtle-pulse': 'subtle-pulse 5s ease-in-out infinite',
-				'subtle-shift': 'subtle-shift 8s ease-in-out infinite'
+				'gradient-shift': 'gradient-shift 3s ease-in-out infinite'
 			}
 		}
 	},
-	plugins: [require("tailwindcss-animate")],
+	plugins: [
+		require("tailwindcss-animate"),
+		function({ addUtilities }) {
+			const newUtilities = {
+				'.text-brand-gradient': {
+					'background-image': 'linear-gradient(to right, var(--gradient-start), var(--gradient-middle), var(--gradient-end))',
+					'background-clip': 'text',
+					'-webkit-background-clip': 'text',
+					'color': 'transparent',
+				},
+				'.border-brand-gradient': {
+					'position': 'relative',
+					'z-index': '0',
+					'&::before': {
+						content: '""',
+						position: 'absolute',
+						'z-index': '-1',
+						inset: '-1px',
+						'border-radius': 'inherit',
+						'background-image': 'linear-gradient(var(--gradient-angle), var(--gradient-start), var(--gradient-middle), var(--gradient-end))',
+					}
+				},
+			}
+			addUtilities(newUtilities)
+		}
+	],
 } satisfies Config;
